@@ -4,7 +4,6 @@ import { file, z, ZodSchema } from "zod";
 export const productSchema = z.object({
   name: z.string().min(2).max(100),
   company: z.string(),
-  category: z.enum(["fitness", "recovery"]),
   muscle: z.enum(["full-body", "upper-body", "lower-body", "core", "recovery"]),
   featured: z.coerce.boolean().default(false),
   price: z.coerce.number().int().min(0),

@@ -6,7 +6,6 @@ import Link from "next/link";
 import Image from "next/image";
 import FavoriteToggleButtonClient from "./FavoriteToggleButtonClient";
 import { Button } from "../ui/button";
-import ProductRating from "@/components/single-product/ProductRating";
 
 function useScreenTier() {
   const [tier, setTier] = useState<"mobile" | "tablet" | "desktop">("mobile");

@@ -9,11 +9,13 @@ import TextAreaInput from "@/components/form/TextAreaInput";
 import CheckboxInput from "@/components/form/CheckboxInput";
 import { SubmitButton } from "@/components/form/Buttons";
 import FormSelect from "@/components/form/FormSelect";
+import db from "@/utils/db";
 
-function CreateProductPage() {
+async function CreateProductPage() {
   const name = faker.commerce.productName();
   const company = faker.company.name();
   const description = faker.lorem.paragraph({ min: 10, max: 12 });
+  const muscles = await db.muscle.findMany();
 
   return (
     <section>
@@ -47,6 +49,18 @@ function CreateProductPage() {
                 { value: "recovery", label: "Recovery" },
               ]}
             />
+
+            <div>
+              <label className="block mb-2 font-medium">Muscle Badges</label>
+              <div className="flex flex-wrap gap-4">
+                {muscles.map((m) => (
+                  <label key={m.id} className="flex items-center gap-2">
+                    <input type="checkbox" name="muscleIds" value={m.id} />
+                    {m.name}
+                  </label>
+                ))}
+              </div>
+            </div>
 
             <FormInput
               type="text"

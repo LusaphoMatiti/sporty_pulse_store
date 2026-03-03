@@ -14,6 +14,7 @@ import { revalidatePath } from "next/cache";
 import { Cart } from "@prisma/client";
 import { ActionResult, AppError } from "./app-error";
 import { FavoriteState } from "./app-error";
+import { Products, Muscle } from "@prisma/client";
 
 const getAuthUser = async () => {
   const user = await currentUser();
@@ -54,9 +55,31 @@ export const fetchAllProducts = async ({ search = "" }: { search: string }) => {
 };
 
 export const fetchSingleProduct = async (productId: string) => {
-  const product = await db.products.findUnique({ where: { id: productId } });
-  if (!product) redirect("/products");
-  return product;
+  const product = await db.products.findUnique({
+    where: { id: productId },
+    // Do NOT include 'muscles' — it doesn't exist as a relation
+  });
+
+  if (!product) return null;
+  // Return product + computed muscleNames
+  return {
+    ...product,
+    muscles: name,
+  };
+};
+
+export const fetchSingleProductWithMuscles = async (id: string) => {
+  return db.products.findUnique({
+    where: { id },
+    include: {
+      productMuscles: {
+        include: {
+          muscle: true,
+        },
+      },
+      category: true,
+    },
+  });
 };
 
 export const createProduction = async (prevState: any, formData: FormData) => {
@@ -64,10 +87,20 @@ export const createProduction = async (prevState: any, formData: FormData) => {
 
   try {
     const rawData = Object.fromEntries(formData.entries());
+    const muscleIds = formData.getAll("muscleIds") as string[];
+    const rawCategory = formData.get("category") as string;
+    const muscleGroup = formData.get("muscle") as string;
 
     const file = formData.get("image") as File;
     if (!(file instanceof File)) {
       return { success: false, message: "Image is required" };
+    }
+
+    if (!rawCategory || !["fitness", "recovery"].includes(rawCategory)) {
+      return {
+        success: false,
+        message: "Category is required and must be fitness or recovery",
+      };
     }
 
     const validatedFields = validateWithZodSchema(productSchema, rawData);
@@ -81,12 +114,37 @@ export const createProduction = async (prevState: any, formData: FormData) => {
     }
 
     const fullPath = await uploadImage(validatedFile.data.image);
+    const { muscle, ...safeData } = validatedFields.data;
 
     await db.products.create({
       data: {
-        ...validatedFields.data,
+        ...safeData,
         image: fullPath,
         clerkId: user.id,
+
+        // simple string column
+        muscle: muscleGroup,
+
+        // ✅ connectOrCreate for Category (safe)
+        category: {
+          connectOrCreate: {
+            where: {
+              name: rawCategory, // because name is @unique in Category model
+            },
+            create: {
+              name: rawCategory,
+            },
+          },
+        },
+
+        // ✅ connectOrCreate for muscles (composite unique)
+        productMuscles: {
+          create: muscleIds.map((id) => ({
+            muscle: {
+              connect: { id }, // safe because id is primary key
+            },
+          })),
+        },
       },
     });
 
@@ -673,5 +731,38 @@ export const fetchFilteredProducts = async ({
             : sort === "popular"
               ? { reviews: { _count: "desc" } }
               : { createdAt: "desc" },
+  });
+};
+
+export const getProductById = async (id: string) => {
+  const product = await prisma?.products.findUnique({
+    where: { id },
+    include: {
+      productMuscles: {
+        include: {
+          muscle: true,
+        },
+      },
+    },
+  });
+
+  return product;
+};
+
+export const attachMusclesToProduct = async (
+  productId: string,
+  muscleIds: string[],
+) => {
+  await db.products.update({
+    where: { id: productId },
+    data: {
+      productMuscles: {
+        create: muscleIds.map((id) => ({
+          muscle: {
+            connect: { id },
+          },
+        })),
+      },
+    },
   });
 };

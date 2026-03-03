@@ -50,7 +50,7 @@ function FormContainer({
   }, [state, onUnauthorized]);
 
   return (
-    <form action={formAction} aria-label="form" encType="multipart/form-data">
+    <form action={formAction} aria-label="form">
       {children}
     </form>
   );

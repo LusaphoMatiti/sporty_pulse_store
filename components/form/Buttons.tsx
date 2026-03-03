@@ -15,12 +15,14 @@ type SubmitButtonProps = {
   className?: string;
   text?: string;
   size?: btnSize;
+  children?: React.ReactNode;
 };
 
 export function SubmitButton({
   className = "",
   text = "submit",
   size = "lg",
+  children,
 }: SubmitButtonProps) {
   const { pending } = useFormStatus();
   return (
@@ -36,7 +38,7 @@ export function SubmitButton({
           Please wait..
         </>
       ) : (
-        text
+        (children ?? text)
       )}
     </Button>
   );
@@ -106,7 +108,7 @@ export const CardSubmitButton = ({
       variant="outline"
       className={cn(
         "p-2 cursor-pointer bg-white hover:bg-gray-400 dark:border-gray-200",
-        className
+        className,
       )}
       disabled={pending}
       onClick={onClick}

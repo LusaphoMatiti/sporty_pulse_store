@@ -1,5 +1,9 @@
 import BreadCrumbs from "@/components/single-product/BreadCrumbs";
-import { fetchSingleProduct, findExistingReview } from "@/utils/action";
+import {
+  fetchSingleProduct,
+  fetchSingleProductWithMuscles,
+  findExistingReview,
+} from "@/utils/action";
 import Image from "next/image";
 import { formatCurrency } from "@/utils/format";
 import FavoriteToggleButton from "@/components/products/FavoriteToggleButton";
@@ -12,6 +16,8 @@ import { currentUser } from "@clerk/nextjs/server";
 import SimilarProducts from "@/components/single-product/SimilarProducts";
 import MarketingLayout from "@/components/layouts/MarketingLayout";
 import TrackView from "@/components/single-product/TrackView";
+import Trainer from "@/components/global/Trainer";
+import { Muscle } from "@prisma/client";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -19,7 +25,7 @@ interface PageProps {
 
 export default async function SingleProductsPage({ params }: PageProps) {
   const { id } = await params;
-  const product = await fetchSingleProduct(id);
+  const product = await fetchSingleProductWithMuscles(id);
 
   if (!product) {
     return (
@@ -35,6 +41,8 @@ export default async function SingleProductsPage({ params }: PageProps) {
   const user = await currentUser();
   const reviewDoesNotExist =
     user && !(await findExistingReview(user.id, product.id));
+
+  const muscles = product.productMuscles.map((pm) => pm.muscle);
 
   return (
     <>
@@ -78,6 +86,12 @@ export default async function SingleProductsPage({ params }: PageProps) {
             <AddToCart productId={id} />
           </div>
         </div>
+
+        <Trainer
+          equipmentName={name}
+          video="https://res.cloudinary.com/dsoxsrjn2/video/upload/v1769429711/lowerbody_video_m6vidn.mp4"
+          muscles={muscles}
+        />
 
         <ProductReviews productId={id} />
 

@@ -1,13 +1,15 @@
 "use client";
 
 import { useRef, useEffect } from "react";
+import clsx from "clsx";
 
 type Prop = {
   video: string;
-  quote: string;
+  quote?: string;
+  className?: string;
 };
 
-export default function WorkOut({ video, quote }: Prop) {
+export default function WorkOut({ video, quote, className }: Prop) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -29,18 +31,13 @@ export default function WorkOut({ video, quote }: Prop) {
 
   return (
     <section
-      className="
-        relative
-        left-1/2
-        right-1/2
-        -ml-[50vw]
-        -mr-[50vw]
-        w-screen
-        overflow-hidden
-        bg-black
-      "
+      className={
+        className
+          ? className
+          : "relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen overflow-hidden bg-black"
+      }
     >
-      <div className="relative h-[260px] sm:h-[360px] lg:h-[620px] w-full overflow-hidden">
+      <div className="relative h-[260px] sm:h-[360px] lg:h-[400px] w-full overflow-hidden">
         <video
           ref={videoRef}
           autoPlay
