@@ -6,7 +6,7 @@ export default defineConfig({
   schema: path.join("prisma", "schema.prisma"),
 
   datasource: {
-    url: env("DATABASE_URL"),
+    url: env("DIRECT_URL"),
   },
   migrations: {
     seed: "tsx prisma/seed.ts",
