@@ -567,6 +567,12 @@ export const createOrderAction = async (formData: FormData) => {
     where: { clerkId: user.id, isPaid: false },
   });
 
+  // Fetch cart items directly here, rather than relying on whatever
+  // fetchOrCreateCart() happens to return -- keeps this self-contained.
+  const cartItems = await db.cartItems.findMany({
+    where: { cartId: cart.id },
+  });
+
   const order = await db.order.create({
     data: {
       clerkId: user.id,
@@ -575,6 +581,12 @@ export const createOrderAction = async (formData: FormData) => {
       tax: cart.tax,
       shipping: cart.shipping,
       email: user.emailAddresses[0]?.emailAddress || "no-email@example.com",
+      orderItems: {
+        create: cartItems.map((item) => ({
+          productId: item.productId,
+          quantity: item.amount,
+        })),
+      },
     },
   });
 
