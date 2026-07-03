@@ -7,6 +7,10 @@ const isPublicRoute = createRouteMatcher([
   "/products(.*)",
   "/sign-in",
   "/sign-up",
+  // Called by PayFast's servers, not a logged-in browser -- has no
+  // session to check. Protected by its own signature/source verification
+  // inside the route itself instead of Clerk's auth layer.
+  "/api/payfast/notify",
 ]);
 
 const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
