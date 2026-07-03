@@ -36,7 +36,10 @@ const computeExpectedSignature = (params: URLSearchParams) => {
   const pairs: string[] = [];
   for (const [key, value] of params.entries()) {
     if (key === "signature") continue;
-    if (value === "") continue;
+    // NOTE: do NOT skip blank values here -- PayFast includes them
+    // (e.g. "item_description=") in their own ITN signature computation.
+    // Skipping blank values is only correct for the outgoing checkout
+    // request, where we simply never include unused fields at all.
     pairs.push(`${key}=${payfastEncode(value)}`);
   }
 
