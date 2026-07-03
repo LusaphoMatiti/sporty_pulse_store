@@ -32,10 +32,7 @@ const payfastEncode = (value: string) =>
  * back in, so we just exclude 'signature' and reuse whatever order we
  * received, which URLSearchParams preserves reliably.
  */
-const verifySignature = (
-  params: URLSearchParams,
-  receivedSignature: string,
-) => {
+const computeExpectedSignature = (params: URLSearchParams) => {
   const pairs: string[] = [];
   for (const [key, value] of params.entries()) {
     if (key === "signature") continue;
@@ -48,12 +45,7 @@ const verifySignature = (
     ? `${paramString}&passphrase=${payfastEncode(PAYFAST_PASSPHRASE)}`
     : paramString;
 
-  const expectedSignature = crypto
-    .createHash("md5")
-    .update(withPassphrase)
-    .digest("hex");
-
-  return expectedSignature === receivedSignature;
+  return crypto.createHash("md5").update(withPassphrase).digest("hex");
 };
 
 /**
@@ -87,15 +79,36 @@ export const POST = async (req: NextRequest) => {
   const amountGross = params.get("amount_gross") ?? "";
   const cartId = params.get("custom_str1") ?? "";
 
+  const expectedSignature = computeExpectedSignature(params);
+
+  // TEMPORARY -- remove once signature issues are confirmed resolved.
+  // Safe to log: PayFast's ITN payload never includes merchant_key.
+  console.log("PayFast ITN debug:", {
+    rawBody,
+    receivedSignature,
+    expectedSignature,
+    merchantIdReceived: merchantId,
+    merchantIdExpected: PAYFAST_MERCHANT_ID,
+    hasPassphraseSet: Boolean(PAYFAST_PASSPHRASE),
+  });
+
   // ── 1. Signature check ─────────────────────────────────────────
-  if (!verifySignature(params, receivedSignature)) {
-    console.error("PayFast ITN: signature mismatch", { orderId });
+  if (expectedSignature !== receivedSignature) {
+    console.error("PayFast ITN: signature mismatch", {
+      orderId,
+      expectedSignature,
+      receivedSignature,
+    });
     return new Response(null, { status: 400 });
   }
 
   // ── 2. Merchant ID check ───────────────────────────────────────
   if (merchantId !== PAYFAST_MERCHANT_ID) {
-    console.error("PayFast ITN: merchant ID mismatch", { orderId });
+    console.error("PayFast ITN: merchant ID mismatch", {
+      orderId,
+      merchantIdReceived: merchantId,
+      merchantIdExpected: PAYFAST_MERCHANT_ID,
+    });
     return new Response(null, { status: 400 });
   }
 
