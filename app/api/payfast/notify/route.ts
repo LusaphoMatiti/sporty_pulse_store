@@ -6,7 +6,10 @@ const PAYFAST_MERCHANT_ID = process.env.PAYFAST_MERCHANT_ID as string;
 const PAYFAST_PASSPHRASE = process.env.PAYFAST_PASSPHRASE as string;
 const PAYFAST_MODE = process.env.PAYFAST_MODE ?? "sandbox"; // "sandbox" | "live"
 const STORE_BRIDGE_SECRET = process.env.STORE_BRIDGE_SECRET as string;
-const PRO_API_BASE_URL = process.env.PRO_API_BASE_URL as string; // e.g. https://sportypulsepro.app
+const PRO_API_BASE_URL = (process.env.PRO_API_BASE_URL as string)?.replace(
+  /\/+$/,
+  "",
+); // e.g. https://sportypulsepro.app -- trailing slash stripped defensively
 
 const PAYFAST_VALIDATE_URL =
   PAYFAST_MODE === "live"
@@ -169,17 +172,30 @@ export const POST = async (req: NextRequest) => {
     // ── 7. Call Pro's bridge so it can unlock the matching equipment ─
     if (order.email && order.orderItems.length > 0 && PRO_API_BASE_URL) {
       try {
-        await fetch(`${PRO_API_BASE_URL}/api/internal/entitlements/grant`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${STORE_BRIDGE_SECRET}`,
+        const bridgeResponse = await fetch(
+          `${PRO_API_BASE_URL}/api/internal/entitlements/grant`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${STORE_BRIDGE_SECRET}`,
+            },
+            body: JSON.stringify({
+              email: order.email,
+              storeProductIds: order.orderItems.map((item) => item.productId),
+            }),
           },
-          body: JSON.stringify({
-            email: order.email,
-            storeProductIds: order.orderItems.map((item) => item.productId),
-          }),
-        });
+        );
+
+        if (!bridgeResponse.ok) {
+          // fetch() does NOT throw on 4xx/5xx -- this is the only way
+          // to actually catch a failed bridge call.
+          const bodyText = await bridgeResponse.text().catch(() => "");
+          console.error("Pro's entitlement bridge rejected the call:", {
+            status: bridgeResponse.status,
+            body: bodyText,
+          });
+        }
       } catch (bridgeError) {
         // Order is still marked paid -- don't fail the whole ITN over
         // this. Log it for now; a retry queue is a post-showcase item.
