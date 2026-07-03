@@ -3,126 +3,177 @@ import crypto from "crypto";
 import db from "@/utils/db";
 
 const PAYFAST_MERCHANT_ID = process.env.PAYFAST_MERCHANT_ID as string;
-const PAYFAST_MERCHANT_KEY = process.env.PAYFAST_MERCHANT_KEY as string;
 const PAYFAST_PASSPHRASE = process.env.PAYFAST_PASSPHRASE as string;
 const PAYFAST_MODE = process.env.PAYFAST_MODE ?? "sandbox"; // "sandbox" | "live"
+const STORE_BRIDGE_SECRET = process.env.STORE_BRIDGE_SECRET as string;
+const PRO_API_BASE_URL = process.env.PRO_API_BASE_URL as string; // e.g. https://sportypulsepro.app
 
-const PAYFAST_PROCESS_URL =
+const PAYFAST_VALIDATE_URL =
   PAYFAST_MODE === "live"
-    ? "https://www.payfast.co.za/eng/process"
-    : "https://sandbox.payfast.co.za/eng/process";
+    ? "https://www.payfast.co.za/eng/query/validate"
+    : "https://sandbox.payfast.co.za/eng/query/validate";
 
-// PayFast's classic checkout signature requires fields in this exact
-// order -- confirmed against PayFast's own SDK repo. Do not reorder.
-const SIGNATURE_FIELD_ORDER = [
-  "merchant_id",
-  "merchant_key",
-  "return_url",
-  "cancel_url",
-  "notify_url",
-  "name_first",
-  "name_last",
-  "email_address",
-  "cell_number",
-  "m_payment_id",
-  "amount",
-  "item_name",
-  "item_description",
-  "custom_int1",
-  "custom_int2",
-  "custom_int3",
-  "custom_int4",
-  "custom_int5",
-  "custom_str1",
-  "custom_str2",
-  "custom_str3",
-  "custom_str4",
-  "custom_str5",
-  "email_confirmation",
-  "confirmation_address",
-] as const;
-
-// PayFast expects PHP urlencode() behaviour: spaces become '+', not %20.
+// Matches the encoding used in the initiate route -- must fully replicate
+// PHP urlencode() behaviour, not just encodeURIComponent().
 const payfastEncode = (value: string) =>
-  encodeURIComponent(value.trim()).replace(/%20/g, "+");
+  encodeURIComponent(value.trim())
+    .replace(/%20/g, "+")
+    .replace(/!/g, "%21")
+    .replace(/'/g, "%27")
+    .replace(/\(/g, "%28")
+    .replace(/\)/g, "%29")
+    .replace(/\*/g, "%2A")
+    .replace(/~/g, "%7E");
 
-const buildSignature = (fields: Record<string, string>) => {
-  const paramString = SIGNATURE_FIELD_ORDER.filter(
-    (key) => fields[key] !== undefined && fields[key] !== "",
-  )
-    .map((key) => `${key}=${payfastEncode(fields[key])}`)
-    .join("&");
+/**
+ * Rebuilds the signature from the ITN payload using the ORDER THE FIELDS
+ * ARRIVED IN (not the fixed checkout field order -- that's only for the
+ * outgoing checkout request). PayFast decides the order it sends fields
+ * back in, so we just exclude 'signature' and reuse whatever order we
+ * received, which URLSearchParams preserves reliably.
+ */
+const verifySignature = (
+  params: URLSearchParams,
+  receivedSignature: string,
+) => {
+  const pairs: string[] = [];
+  for (const [key, value] of params.entries()) {
+    if (key === "signature") continue;
+    if (value === "") continue;
+    pairs.push(`${key}=${payfastEncode(value)}`);
+  }
 
+  const paramString = pairs.join("&");
   const withPassphrase = PAYFAST_PASSPHRASE
     ? `${paramString}&passphrase=${payfastEncode(PAYFAST_PASSPHRASE)}`
     : paramString;
 
-  return crypto.createHash("md5").update(withPassphrase).digest("hex");
+  const expectedSignature = crypto
+    .createHash("md5")
+    .update(withPassphrase)
+    .digest("hex");
+
+  return expectedSignature === receivedSignature;
+};
+
+/**
+ * Confirms with PayFast's own servers that this ITN genuinely came from
+ * them -- PayFast's recommended alternative to manually checking source IPs,
+ * which is fragile in a serverless environment.
+ */
+const verifyWithPayFast = async (rawBody: string) => {
+  try {
+    const response = await fetch(PAYFAST_VALIDATE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: rawBody,
+    });
+    const text = await response.text();
+    return text.trim() === "VALID";
+  } catch (error) {
+    console.error("PayFast validate-endpoint check failed:", error);
+    return false;
+  }
 };
 
 export const POST = async (req: NextRequest) => {
-  if (!PAYFAST_MERCHANT_ID || !PAYFAST_MERCHANT_KEY) {
-    console.error("PayFast credentials are not set");
-    return Response.json(null, {
-      status: 500,
-      statusText: "Internal Server Error",
-    });
+  const rawBody = await req.text();
+  const params = new URLSearchParams(rawBody);
+
+  const receivedSignature = params.get("signature") ?? "";
+  const merchantId = params.get("merchant_id") ?? "";
+  const paymentStatus = params.get("payment_status") ?? "";
+  const orderId = params.get("m_payment_id") ?? "";
+  const amountGross = params.get("amount_gross") ?? "";
+  const cartId = params.get("custom_str1") ?? "";
+
+  // ── 1. Signature check ─────────────────────────────────────────
+  if (!verifySignature(params, receivedSignature)) {
+    console.error("PayFast ITN: signature mismatch", { orderId });
+    return new Response(null, { status: 400 });
   }
 
-  const requestHeaders = new Headers(req.headers);
-  const origin = requestHeaders.get("origin");
+  // ── 2. Merchant ID check ───────────────────────────────────────
+  if (merchantId !== PAYFAST_MERCHANT_ID) {
+    console.error("PayFast ITN: merchant ID mismatch", { orderId });
+    return new Response(null, { status: 400 });
+  }
 
-  const { orderId, cartId } = await req.json();
+  // ── 3. Source check -- confirm this really came from PayFast ──
+  const isFromPayFast = await verifyWithPayFast(rawBody);
+  if (!isFromPayFast) {
+    console.error("PayFast ITN: failed source validation", { orderId });
+    return new Response(null, { status: 400 });
+  }
+
+  // ── 4. Only proceed on a completed payment ─────────────────────
+  if (paymentStatus !== "COMPLETE") {
+    // Not an error -- PayFast also sends ITNs for other statuses.
+    return new Response(null, { status: 200 });
+  }
 
   try {
-    const order = await db.order.findUnique({ where: { id: orderId } });
-    const cart = await db.cart.findUnique({
-      where: { id: cartId },
-      include: { cartItems: { include: { product: true } } },
+    const order = await db.order.findUnique({
+      where: { id: orderId },
+      include: { orderItems: true },
     });
 
-    if (!order || !cart) {
-      return Response.json(null, { status: 404, statusText: "Not Found" });
+    if (!order) {
+      console.error("PayFast ITN: no matching order", { orderId });
+      return new Response(null, { status: 404 });
     }
 
-    // PayFast charges per-transaction, not per line item -- one combined
-    // description covering the whole order.
-    const itemName =
-      cart.cartItems.length === 1
-        ? cart.cartItems[0].product.name
-        : `Sporty Pulse Store order (${cart.cartItems.length} items)`;
+    // Already processed -- PayFast can resend the same ITN.
+    if (order.isPaid) {
+      return new Response(null, { status: 200 });
+    }
 
-    // NOTE: order.orderTotal is stored in whole Rand (see updateCart()),
-    // not cents -- unlike the old Stripe route, which multiplied by 100
-    // only at the point of calling Stripe's API. Do NOT divide here.
-    const fields: Record<string, string> = {
-      merchant_id: PAYFAST_MERCHANT_ID,
-      merchant_key: PAYFAST_MERCHANT_KEY,
-      // return_url is browser-only -- no order mutation happens here.
-      return_url: `${origin}/orders`,
-      cancel_url: `${origin}/cart`,
-      // notify_url is the only thing allowed to mark this order as paid.
-      notify_url: `${origin}/api/payfast/notify`,
-      email_address: order.email,
-      m_payment_id: orderId,
-      amount: order.orderTotal.toFixed(2),
-      item_name: itemName,
-      // Carried through so the ITN handler knows which cart to clean up.
-      custom_str1: cartId,
-    };
+    // ── 5. Amount check -- protects against a tampered amount ────
+    const expectedAmount = order.orderTotal.toFixed(2);
+    if (amountGross !== expectedAmount) {
+      console.error("PayFast ITN: amount mismatch", {
+        orderId,
+        expected: expectedAmount,
+        received: amountGross,
+      });
+      return new Response(null, { status: 400 });
+    }
 
-    const signature = buildSignature(fields);
-
-    return Response.json({
-      actionUrl: PAYFAST_PROCESS_URL,
-      fields: { ...fields, signature },
+    // ── 6. Mark the order paid ────────────────────────────────────
+    await db.order.update({
+      where: { id: orderId },
+      data: { isPaid: true },
     });
+
+    if (cartId) {
+      // Best-effort -- don't fail the ITN if the cart is already gone.
+      await db.cart.delete({ where: { id: cartId } }).catch(() => null);
+    }
+
+    // ── 7. Call Pro's bridge so it can unlock the matching equipment ─
+    if (order.email && order.orderItems.length > 0 && PRO_API_BASE_URL) {
+      try {
+        await fetch(`${PRO_API_BASE_URL}/api/internal/entitlements/grant`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${STORE_BRIDGE_SECRET}`,
+          },
+          body: JSON.stringify({
+            email: order.email,
+            storeProductIds: order.orderItems.map((item) => item.productId),
+          }),
+        });
+      } catch (bridgeError) {
+        // Order is still marked paid -- don't fail the whole ITN over
+        // this. Log it for now; a retry queue is a post-showcase item.
+        console.error("Failed to call Pro's entitlement bridge:", bridgeError);
+      }
+    }
+
+    return new Response(null, { status: 200 });
   } catch (error) {
-    // This is the line to watch in your server logs / Vercel Functions log.
-    console.error("PayFast checkout initiation failed:", error);
-    return Response.json(
-      { error: "Could not initiate PayFast checkout" },
-      { status: 500 },
-    );
+    console.error("PayFast ITN processing error:", error);
+    return new Response(null, { status: 500 });
   }
 };

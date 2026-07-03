@@ -42,9 +42,18 @@ const SIGNATURE_FIELD_ORDER = [
   "confirmation_address",
 ] as const;
 
-// PayFast expects PHP urlencode() behaviour: spaces become '+', not %20.
+// PayFast expects PHP urlencode() behaviour. encodeURIComponent() alone
+// isn't enough -- it leaves !'()*~ unescaped, but PHP's urlencode()
+// escapes all of them, and spaces become '+' rather than %20.
 const payfastEncode = (value: string) =>
-  encodeURIComponent(value.trim()).replace(/%20/g, "+");
+  encodeURIComponent(value.trim())
+    .replace(/%20/g, "+")
+    .replace(/!/g, "%21")
+    .replace(/'/g, "%27")
+    .replace(/\(/g, "%28")
+    .replace(/\)/g, "%29")
+    .replace(/\*/g, "%2A")
+    .replace(/~/g, "%7E");
 
 const buildSignature = (fields: Record<string, string>) => {
   const paramString = SIGNATURE_FIELD_ORDER.filter(
@@ -74,44 +83,55 @@ export const POST = async (req: NextRequest) => {
 
   const { orderId, cartId } = await req.json();
 
-  const order = await db.order.findUnique({ where: { id: orderId } });
-  const cart = await db.cart.findUnique({
-    where: { id: cartId },
-    include: { cartItems: { include: { product: true } } },
-  });
+  try {
+    const order = await db.order.findUnique({ where: { id: orderId } });
+    const cart = await db.cart.findUnique({
+      where: { id: cartId },
+      include: { cartItems: { include: { product: true } } },
+    });
 
-  if (!order || !cart) {
-    return Response.json(null, { status: 404, statusText: "Not Found" });
+    if (!order || !cart) {
+      return Response.json(null, { status: 404, statusText: "Not Found" });
+    }
+
+    // PayFast charges per-transaction, not per line item -- one combined
+    // description covering the whole order.
+    const itemName =
+      cart.cartItems.length === 1
+        ? cart.cartItems[0].product.name
+        : `Sporty Pulse Store order (${cart.cartItems.length} items)`;
+
+    // NOTE: order.orderTotal is stored in whole Rand (see updateCart()),
+    // not cents -- unlike the old Stripe route, which multiplied by 100
+    // only at the point of calling Stripe's API. Do NOT divide here.
+    const fields: Record<string, string> = {
+      merchant_id: PAYFAST_MERCHANT_ID,
+      merchant_key: PAYFAST_MERCHANT_KEY,
+      // return_url is browser-only -- no order mutation happens here.
+      return_url: `${origin}/orders`,
+      cancel_url: `${origin}/cart`,
+      // notify_url is the only thing allowed to mark this order as paid.
+      notify_url: `${origin}/api/payfast/notify`,
+      email_address: order.email,
+      m_payment_id: orderId,
+      amount: order.orderTotal.toFixed(2),
+      item_name: itemName,
+      // Carried through so the ITN handler knows which cart to clean up.
+      custom_str1: cartId,
+    };
+
+    const signature = buildSignature(fields);
+
+    return Response.json({
+      actionUrl: PAYFAST_PROCESS_URL,
+      fields: { ...fields, signature },
+    });
+  } catch (error) {
+    // This is the line to watch in your server logs / Vercel Functions log.
+    console.error("PayFast checkout initiation failed:", error);
+    return Response.json(
+      { error: "Could not initiate PayFast checkout" },
+      { status: 500 },
+    );
   }
-
-  // PayFast charges per-transaction, not per line item -- one combined
-  // description covering the whole order.
-  const itemName =
-    cart.cartItems.length === 1
-      ? cart.cartItems[0].product.name
-      : `Sporty Pulse Store order (${cart.cartItems.length} items)`;
-
-  // NOTE: order.orderTotal is stored in whole Rand (see updateCart()),
-  // not cents -- unlike the old Stripe route, which multiplied by 100
-  // only at the point of calling Stripe's API. Do NOT divide here.
-  const fields: Record<string, string> = {
-    merchant_id: PAYFAST_MERCHANT_ID,
-    merchant_key: PAYFAST_MERCHANT_KEY,
-    // return_url is browser-only -- no order mutation happens here.
-    return_url: `${origin}/orders`,
-    cancel_url: `${origin}/cart`,
-    // notify_url is the only thing allowed to mark this order as paid.
-    notify_url: `${origin}/api/payfast/notify`,
-    email_address: order.email,
-    m_payment_id: orderId,
-    amount: order.orderTotal.toFixed(2),
-    item_name: itemName,
-  };
-
-  const signature = buildSignature(fields);
-
-  return Response.json({
-    actionUrl: PAYFAST_PROCESS_URL,
-    fields: { ...fields, signature },
-  });
 };
