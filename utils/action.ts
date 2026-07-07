@@ -120,7 +120,7 @@ export const createProduction = async (prevState: any, formData: FormData) => {
       data: {
         ...safeData,
         image: fullPath,
-        clerkId: user.id,
+        userId: user.id,
 
         // simple string column
         muscle: muscleGroup,
@@ -269,7 +269,7 @@ export const updateProductImageAction = async (
 export const fetchFavoriteId = async ({ productId }: { productId: string }) => {
   const user = await getAuthUser();
   const favorite = await db.favorite.findFirst({
-    where: { productId, clerkId: user.id },
+    where: { productId, userId: user.id },
     select: { id: true },
   });
   return favorite?.id || null;
@@ -306,7 +306,7 @@ export const toggleFavorite = async (
       };
     }
     const favorite = await db.favorite.create({
-      data: { productId, clerkId: userId },
+      data: { productId, userId: userId },
     });
 
     return {
@@ -327,7 +327,7 @@ export const toggleFavorite = async (
 export const fetchUserFavorites = async () => {
   const user = await getAuthUser();
   return db.favorite.findMany({
-    where: { clerkId: user.id },
+    where: { userId: user.id },
     include: { product: true },
   });
 };
@@ -344,7 +344,7 @@ export const createReviewAction = async (
     const validated = validateWithZodSchema(reviewSchema, rawData);
     if (!validated.success) throw new Error(validated.message);
 
-    await db.review.create({ data: { ...validated.data, clerkId: user.id } });
+    await db.review.create({ data: { ...validated.data, userId: user.id } });
     revalidatePath(`/products/${validated.data.productId}`);
     return { success: true, message: "Review submitted successfully" };
   } catch (error) {
@@ -375,7 +375,7 @@ export const fetchProductRating = async (productId: string) => {
 export const fetchProductReviewsByUser = async () => {
   const user = await getAuthUser();
   return db.review.findMany({
-    where: { clerkId: user.id },
+    where: { userId: user.id },
     select: {
       id: true,
       rating: true,
@@ -389,7 +389,7 @@ export const deleteReviewAction = async (prevState: { reviewId: string }) => {
   const user = await getAuthUser();
   try {
     await db.review.delete({
-      where: { id: prevState.reviewId, clerkId: user.id },
+      where: { id: prevState.reviewId, userId: user.id },
     });
     revalidatePath("/reviews");
     return { success: true, message: "Review deleted successfully" };
@@ -400,15 +400,15 @@ export const deleteReviewAction = async (prevState: { reviewId: string }) => {
 };
 
 export const findExistingReview = async (userId: string, productId: string) =>
-  db.review.findFirst({ where: { clerkId: userId, productId } });
+  db.review.findFirst({ where: { userId: userId, productId } });
 
 /** CART **/
 
 export const fetchOrCreateCart = async () => {
   const user = await getAuthUser();
-  let cart = await db.cart.findFirst({ where: { clerkId: user.id } });
+  let cart = await db.cart.findFirst({ where: { userId: user.id } });
   if (!cart) {
-    cart = await db.cart.create({ data: { clerkId: user.id } });
+    cart = await db.cart.create({ data: { userId: user.id } });
   }
   return cart;
 };
@@ -564,7 +564,7 @@ export const createOrderAction = async (formData: FormData) => {
   const cart = await fetchOrCreateCart();
 
   await db.order.deleteMany({
-    where: { clerkId: user.id, isPaid: false },
+    where: { userId: user.id, isPaid: false },
   });
 
   // Fetch cart items directly here, rather than relying on whatever
@@ -575,7 +575,7 @@ export const createOrderAction = async (formData: FormData) => {
 
   const order = await db.order.create({
     data: {
-      clerkId: user.id,
+      userId: user.id,
       products: cart.numItemsInCart,
       orderTotal: cart.orderTotal,
       tax: cart.tax,
@@ -597,7 +597,7 @@ export const fetchUserOrders = async () => {
   const user = await getAuthUser();
   const orders = await db.order.findMany({
     where: {
-      clerkId: user.id,
+      userId: user.id,
       isPaid: true,
     },
     orderBy: {
@@ -659,7 +659,7 @@ export const updateCartItemAction = async (formData: FormData) => {
 
   if (!cartItem) return;
 
-  if (cartItem.cart.clerkId !== user.id) return;
+  if (cartItem.cart.userId !== user.id) return;
 
   await db.cartItems.update({
     where: { id: cartItemId },
