@@ -1,5 +1,3 @@
-// components/products/ProductsList.tsx
-
 import { formatCurrency } from "@/utils/format";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,7 +14,7 @@ type ProductWithFavorite = {
   price: number;
   createdAt: Date;
   updatedAt: Date;
-  clerkId: string;
+  userId: string | null;
   favoriteId: string | null;
 };
 

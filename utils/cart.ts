@@ -1,4 +1,3 @@
-// utils/cart.ts
 import db from "@/utils/db";
 import { getServerUser } from "@/utils/server/auth";
 
@@ -9,7 +8,7 @@ export async function fetchCartItems() {
 
   const cart = await db.cart.findFirst({
     where: {
-      clerkId: user.id,
+      userId: user.id,
     },
     select: {
       numItemsInCart: true,

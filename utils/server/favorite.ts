@@ -11,7 +11,7 @@ export async function fetchFavoriteId(productId: string) {
     const favorite = await db.favorite.findFirst({
       where: {
         productId,
-        clerkId: userId,
+        userId: userId,
       },
       select: {
         id: true,
@@ -33,7 +33,7 @@ export type FavoriteState = {
 
 export async function toggleFavorite(
   prevState: FavoriteState,
-  formData: FormData
+  formData: FormData,
 ): Promise<FavoriteState> {
   const userId = await getServerUserId();
 
@@ -62,7 +62,7 @@ export async function toggleFavorite(
     const newFavorite = await db.favorite.create({
       data: {
         productId,
-        clerkId: userId,
+        userId: userId,
       },
       select: {
         id: true,
