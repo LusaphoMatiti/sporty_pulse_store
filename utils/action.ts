@@ -674,7 +674,13 @@ export const updateCartItemAction = async (formData: FormData) => {
 // action.ts
 export const fetchProductsByMuscle = async (muscle: string) => {
   return db.products.findMany({
-    where: { muscle },
+    where: {
+      productMuscles: {
+        some: {
+          muscle: { category: muscle },
+        },
+      },
+    },
     orderBy: { createdAt: "desc" },
     include: { reviews: true },
   });
@@ -729,7 +735,15 @@ export const fetchFilteredProducts = async ({
           : {},
         minPrice ? { price: { gte: minPrice } } : {},
         maxPrice ? { price: { lte: maxPrice } } : {},
-        category ? { muscle: category } : {},
+        category
+          ? {
+              productMuscles: {
+                some: {
+                  muscle: { category },
+                },
+              },
+            }
+          : {},
       ],
     },
 
