@@ -54,7 +54,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "upper-body",
-    muscleBadges: ["Chest", "Arms"],
+    muscleBadges: ["Chest", "Arms", "Core"],
   },
   {
     name: "Resistance Bands (Set)",
@@ -78,7 +78,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "upper-body",
-    muscleBadges: ["Chest", "Back"],
+    muscleBadges: ["Chest", "Back", "Legs"],
   },
   {
     name: "Yoga Mat",
@@ -90,7 +90,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "full-body",
-    muscleBadges: ["Chest", "Core", "Recovery"],
+    muscleBadges: ["Chest", "Core", "Recovery", "Legs"],
   },
   {
     name: "Home Dumbbells (2kg Pair)",
@@ -98,11 +98,13 @@ const PRODUCTS: ProductSeed[] = [
     description:
       "A lightweight pair of dumbbells suited to toning work, higher-rep shoulder isolation, and beginner-friendly strength building. Compact enough to keep within reach for spontaneous sessions, they're the easiest entry point into structured resistance training without committing to a full rack.",
     price: 200,
-    image: imageUrl("1772635722566-home_dumbells.jpg"),
+    image: imageUrl(
+      "https://xewudrozihbinbtsihvw.supabase.co/storage/v1/object/public/loomora-bucket/home_dumbells.jpg",
+    ),
     featured: false,
     category: "fitness",
     muscle: "upper-body",
-    muscleBadges: ["Shoulders"],
+    muscleBadges: ["Shoulders", "Arms", "Legs"],
   },
   {
     name: "Kettlebell (12kg)",
@@ -137,8 +139,8 @@ const PRODUCTS: ProductSeed[] = [
     image: imageUrl("1772637154487-Pull-up bar.webp"),
     featured: false,
     category: "fitness",
-    muscle: "full-body",
-    muscleBadges: ["Full-body", "Back"],
+    muscle: "upper-body",
+    muscleBadges: ["Back"],
   },
   {
     name: "Dip Bars",
@@ -146,7 +148,9 @@ const PRODUCTS: ProductSeed[] = [
     description:
       "Freestanding parallel bars purpose-built for dips, push-ups, and controlled leg raises. The stable, elevated grip lets you load bodyweight-only movements far more effectively than the floor, making it one of the most efficient tools for building arm and tricep strength at home.",
     price: 1400,
-    image: imageUrl("1772634291560-Dip_bars.avif"),
+    image: imageUrl(
+      "https://xewudrozihbinbtsihvw.supabase.co/storage/v1/object/public/loomora-bucket/dip%20bars.webp",
+    ),
     featured: false,
     category: "fitness",
     muscle: "upper-body",
@@ -174,7 +178,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "core",
-    muscleBadges: ["Core"],
+    muscleBadges: ["Core", "Legs"],
   },
   {
     name: "Stability Ball",
@@ -198,7 +202,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "core",
-    muscleBadges: ["Core"],
+    muscleBadges: ["Core", "Arms"],
   },
   {
     name: "Ankle Weights (2kg Pair)",
@@ -222,7 +226,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "full-body",
-    muscleBadges: ["Full-body"],
+    muscleBadges: ["Legs", "Arms", "Core"],
   },
   {
     name: "Foam Roller",
@@ -230,11 +234,13 @@ const PRODUCTS: ProductSeed[] = [
     description:
       "A firm foam roller for self-myofascial release and post-workout recovery. Rolling out tight muscles after training helps ease soreness, restore range of motion, and speed up recovery between sessions -- an essential companion to any serious full-body training routine.",
     price: 350,
-    image: imageUrl("1772641359547-foam-rollerr.webp"),
+    image: imageUrl(
+      "https://xewudrozihbinbtsihvw.supabase.co/storage/v1/object/public/loomora-bucket/soft-massaging-foam-roller-blue.avif",
+    ),
     featured: false,
     category: "recovery",
     muscle: "recovery",
-    muscleBadges: ["Full-body", "Recovery", "Back"],
+    muscleBadges: ["Recovery", "Back"],
   },
   {
     name: "Adjustable Bench",
@@ -246,7 +252,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "full-body",
-    muscleBadges: ["Full-body"],
+    muscleBadges: ["Chest", "Arms", "Legs"],
   },
   {
     name: "Massage Ball",
@@ -316,7 +322,9 @@ const PRODUCTS: ProductSeed[] = [
     description:
       "A durable, looped stretch strap that extends your reach for deeper, safer stretching. The multiple grip loops let you ease into hamstring, shoulder, and hip stretches with control, making it a simple but essential tool for any post-training recovery routine.",
     price: 150, // TODO: confirm price
-    image: imageUrl("TODO-stretch-strap.jpg"), // TODO: replace with real Cloudinary filename
+    image: imageUrl(
+      "https://xewudrozihbinbtsihvw.supabase.co/storage/v1/object/public/loomora-bucket/Stretch_strap.jpg",
+    ), // TODO: replace with real Cloudinary filename
     featured: false,
     category: "recovery",
     muscle: "recovery",
@@ -330,7 +338,9 @@ const PRODUCTS: ProductSeed[] = [
     description:
       "A supportive compression sleeve that promotes circulation and reduces muscle fatigue during and after training. Consistent, graduated pressure helps ease swelling and soreness, making it a quiet, everyday recovery aid for anyone training regularly.",
     price: 220, // TODO: confirm price
-    image: imageUrl("TODO-compression-sleeve.jpg"), // TODO: replace with real Cloudinary filename
+    image: imageUrl(
+      "https://xewudrozihbinbtsihvw.supabase.co/storage/v1/object/public/loomora-bucket/compression_sleeve.jpg",
+    ), // TODO: replace with real Cloudinary filename
     featured: false,
     category: "recovery",
     muscle: "recovery",
