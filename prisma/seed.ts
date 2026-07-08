@@ -66,7 +66,15 @@ const PRODUCTS: ProductSeed[] = [
     featured: true,
     category: "fitness",
     muscle: "full-body",
-    muscleBadges: ["Chest", "Shoulders", "Arms", "Core", "Legs", "Recovery"],
+    muscleBadges: [
+      "Chest",
+      "Shoulders",
+      "Arms",
+      "Core",
+      "Legs",
+      "Recovery",
+      "Full-body",
+    ],
   },
   {
     name: "Weight Plate (20kg)",
@@ -78,7 +86,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "upper-body",
-    muscleBadges: ["Chest", "Back", "Legs"],
+    muscleBadges: ["Chest", "Back", "Legs", "Full-body"],
   },
   {
     name: "Yoga Mat",
@@ -90,7 +98,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "full-body",
-    muscleBadges: ["Chest", "Core", "Recovery", "Legs"],
+    muscleBadges: ["Chest", "Core", "Recovery", "Legs", "Full-body"],
   },
   {
     name: "Home Dumbbells (2kg Pair)",
@@ -226,7 +234,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "full-body",
-    muscleBadges: ["Legs", "Arms", "Core"],
+    muscleBadges: ["Legs", "Arms", "Core", "Full-body"],
   },
   {
     name: "Foam Roller",
@@ -312,7 +320,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: true,
     category: "fitness",
     muscle: "upper-body",
-    muscleBadges: ["Chest", "Arms", "Legs"],
+    muscleBadges: ["Chest", "Arms", "Legs", "Full-body"],
   },
   // TODO: replace placeholder image filename and confirm price before seeding.
   // No existing Cloudinary asset for this product yet.
@@ -328,7 +336,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "recovery",
     muscle: "recovery",
-    muscleBadges: ["Recovery"],
+    muscleBadges: ["Recovery", "Full-body"],
   },
   // TODO: replace placeholder image filename and confirm price before seeding.
   // No existing Cloudinary asset for this product yet.
