@@ -1,30 +1,24 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 
 export default function AuthToast() {
-  const { isSignedIn, user } = useUser();
+  const { data: session, status } = useSession();
   const hasShown = useRef(false);
 
   useEffect(() => {
-    if (!isSignedIn || !user) return;
+    if (status !== "authenticated" || !session?.user) return;
     if (hasShown.current) return;
 
-    const isNewUser =
-      user.createdAt &&
-      user.lastSignInAt &&
-      user.createdAt === user.lastSignInAt;
-
-    if (isNewUser) {
-      toast.success("Account created 🎉");
-    } else {
-      toast.success(`Welcome back, ${user.firstName} 💪`);
-    }
+    const firstName = session.user.name?.split(" ")[0];
+    toast.success(
+      firstName ? `Welcome back, ${firstName} 💪` : "Welcome back 💪",
+    );
 
     hasShown.current = true;
-  }, [isSignedIn, user]);
+  }, [status, session]);
 
   return null;
 }
