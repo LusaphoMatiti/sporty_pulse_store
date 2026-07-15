@@ -54,7 +54,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "upper-body",
-    muscleBadges: ["Chest", "Arms", "Core"],
+    muscleBadges: ["Chest", "Shoulders", "Arms", "Core"],
   },
   {
     name: "Resistance Bands (Set)",
@@ -68,6 +68,7 @@ const PRODUCTS: ProductSeed[] = [
     muscle: "full-body",
     muscleBadges: [
       "Chest",
+      "Back",
       "Shoulders",
       "Arms",
       "Core",
@@ -86,7 +87,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "upper-body",
-    muscleBadges: ["Chest", "Back", "Legs", "Full-body"],
+    muscleBadges: ["Chest", "Back", "Shoulders", "Core", "Legs", "Full-body"],
   },
   {
     name: "Yoga Mat",
@@ -110,7 +111,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "upper-body",
-    muscleBadges: ["Shoulders", "Arms", "Legs"],
+    muscleBadges: ["Chest", "Shoulders", "Arms", "Legs"],
   },
   {
     name: "Kettlebell (12kg)",
@@ -122,7 +123,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: true,
     category: "fitness",
     muscle: "full-body",
-    muscleBadges: ["Shoulders", "Legs", "Back"],
+    muscleBadges: ["Shoulders", "Back", "Core", "Legs", "Full-body"],
   },
   {
     name: "Sandbag (20kg)",
@@ -134,7 +135,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "full-body",
-    muscleBadges: ["Shoulders", "Legs", "Back"],
+    muscleBadges: ["Shoulders", "Back", "Core", "Legs", "Full-body"],
   },
   {
     name: "Pull-Up Bar (Doorway)",
@@ -146,7 +147,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "upper-body",
-    muscleBadges: ["Back"],
+    muscleBadges: ["Back", "Arms", "Core"],
   },
   {
     name: "Dip Bars",
@@ -158,7 +159,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "upper-body",
-    muscleBadges: ["Arms"],
+    muscleBadges: ["Chest", "Shoulders", "Arms", "Core"],
   },
   {
     name: "Ab Wheel",
@@ -170,7 +171,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "core",
-    muscleBadges: ["Core"],
+    muscleBadges: ["Core", "Shoulders"],
   },
   {
     name: "Medicine Ball (6-8kg)",
@@ -182,7 +183,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "core",
-    muscleBadges: ["Core", "Legs"],
+    muscleBadges: ["Core", "Legs", "Shoulders", "Full-body"],
   },
   {
     name: "Stability Ball",
@@ -194,7 +195,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "core",
-    muscleBadges: ["Core", "Back"],
+    muscleBadges: ["Core", "Back", "Legs"],
   },
   {
     name: "Slider Discs",
@@ -206,7 +207,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "core",
-    muscleBadges: ["Core", "Arms"],
+    muscleBadges: ["Core", "Arms", "Legs"],
   },
   {
     name: "Ankle Weights (2kg Pair)",
@@ -242,7 +243,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "recovery",
     muscle: "recovery",
-    muscleBadges: ["Recovery", "Back"],
+    muscleBadges: ["Recovery", "Back", "Legs", "Full-body"],
   },
   {
     name: "Adjustable Bench",
@@ -254,7 +255,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "full-body",
-    muscleBadges: ["Chest", "Arms", "Legs"],
+    muscleBadges: ["Chest", "Back", "Shoulders", "Arms", "Legs"],
   },
   {
     name: "Massage Ball",
@@ -266,7 +267,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "recovery",
     muscle: "recovery",
-    muscleBadges: ["Recovery", "Back"],
+    muscleBadges: ["Recovery", "Back", "Shoulders", "Legs"],
   },
   {
     name: "Massage Gun",
@@ -278,7 +279,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "recovery",
     muscle: "recovery",
-    muscleBadges: ["Recovery", "Back"],
+    muscleBadges: ["Recovery", "Back", "Legs", "Full-body"],
   },
   {
     name: "Hot/Cold Pack",
@@ -302,7 +303,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "recovery",
     muscle: "recovery",
-    muscleBadges: ["Recovery"],
+    muscleBadges: ["Recovery", "Full-body"],
   },
   {
     name: "Adjustable Dumbbell",
@@ -314,7 +315,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: true,
     category: "fitness",
     muscle: "upper-body",
-    muscleBadges: ["Chest", "Arms", "Legs", "Full-body"],
+    muscleBadges: ["Chest", "Back", "Shoulders", "Arms", "Legs", "Full-body"],
   },
   // TODO: replace placeholder image filename and confirm price before seeding.
   // No existing Cloudinary asset for this product yet.
@@ -328,7 +329,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "recovery",
     muscle: "recovery",
-    muscleBadges: ["Recovery", "Full-body"],
+    muscleBadges: ["Recovery", "Full-body", "Legs", "Shoulders"],
   },
   // TODO: replace placeholder image filename and confirm price before seeding.
   // No existing Cloudinary asset for this product yet.
