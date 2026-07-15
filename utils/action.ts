@@ -735,7 +735,22 @@ export const fetchFilteredProducts = async ({
           : {},
         minPrice ? { price: { gte: minPrice } } : {},
         maxPrice ? { price: { lte: maxPrice } } : {},
-        category ? { muscle: category } : {},
+        // Was `{ muscle: category }`, which only matched the single scalar
+        // field -- meant a product could ever appear on ONE category page,
+        // no matter how many badges it had in productMuscles. Filtering
+        // through the join table instead means a product shows up on
+        // every category page for which it has a matching muscle badge
+        // (e.g. Resistance Bands, tagged with Chest/Legs/Core/etc, now
+        // correctly appears on upper-body, lower-body, and core pages).
+        category
+          ? {
+              productMuscles: {
+                some: {
+                  muscle: { category },
+                },
+              },
+            }
+          : {},
       ],
     },
 
