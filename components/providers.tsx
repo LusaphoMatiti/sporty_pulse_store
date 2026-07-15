@@ -1,7 +1,12 @@
 "use client";
 
+import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "./theme-switch";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
-  return <ThemeProvider disableTransitionOnChange>{children}</ThemeProvider>;
+  return (
+    <SessionProvider>
+      <ThemeProvider disableTransitionOnChange>{children}</ThemeProvider>
+    </SessionProvider>
+  );
 }

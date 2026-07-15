@@ -6,7 +6,7 @@
 
     // Module system used by Next.js
     "module": "esnext",
-    "moduleResolution": "bundler", // ✅ fix: resolves "next/navigation" etc.
+    "moduleResolution": "bundler",
 
     // Common safety flags
     "allowJs": true,

@@ -1,12 +1,12 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import { LuUser } from "react-icons/lu";
 
 export default function UserIcon() {
-  const { user } = useUser();
+  const { data: session } = useSession();
 
-  const profileImage = user?.imageUrl;
+  const profileImage = session?.user?.image;
 
   if (profileImage) {
     return (

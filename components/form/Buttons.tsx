@@ -4,7 +4,7 @@ import { ReloadIcon } from "@radix-ui/react-icons";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { SignInButton } from "@clerk/nextjs";
+import Link from "next/link";
 import { FaRegHeart, FaHeart } from "react-icons/fa";
 import { LuTrash2, LuSquare } from "react-icons/lu";
 import { SquarePen } from "lucide-react";
@@ -75,18 +75,18 @@ export const IconButton = ({ actionType }: { actionType: actionType }) => {
 
 export const CardSignInButton = () => {
   return (
-    <SignInButton mode="modal">
-      <Button
-        type="button"
-        size="icon"
-        variant="outline"
-        className="p-2 cursor-pointer bg-white hover:bg-gray-400"
-        asChild
-        aria-label="Sign out button"
-      >
+    <Button
+      asChild
+      type="button"
+      size="icon"
+      variant="outline"
+      className="p-2 cursor-pointer bg-white hover:bg-gray-400"
+      aria-label="Sign in button"
+    >
+      <Link href="/sign-in">
         <FaRegHeart />
-      </Button>
-    </SignInButton>
+      </Link>
+    </Button>
   );
 };
 
@@ -127,14 +127,12 @@ export const CardSubmitButton = ({
 
 export const ProductSignButton = () => {
   return (
-    <SignInButton mode="modal">
-      <Button
-        type="button"
-        className="mt-8 capitalize cursor-pointer"
-        aria-label="Sign In button"
-      >
-        sign in
-      </Button>
-    </SignInButton>
+    <Button
+      asChild
+      className="mt-8 capitalize cursor-pointer"
+      aria-label="Sign In button"
+    >
+      <Link href="/sign-in">sign in</Link>
+    </Button>
   );
 };

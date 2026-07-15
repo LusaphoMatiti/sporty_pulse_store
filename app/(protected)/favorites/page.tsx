@@ -4,11 +4,12 @@ import MarketingLayout from "@/components/layouts/MarketingLayout";
 import ProductsGrid from "@/components/products/ProductsGrid";
 import BreadCrumbs from "@/components/single-product/BreadCrumbs";
 import { fetchUserFavorites } from "@/utils/action";
-import { currentUser } from "@clerk/nextjs/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export default async function FavoritesPage() {
-  const user = await currentUser();
-  const userId = user?.id ?? null;
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id ?? null;
 
   const favorites = await fetchUserFavorites();
 

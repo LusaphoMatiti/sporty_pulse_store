@@ -12,7 +12,6 @@
     "postinstall": "npx prisma generate"
   },
   "dependencies": {
-    "@clerk/nextjs": "^6.35.2",
     "@heroui/accordion": "2.2.23",
     "@heroui/alert": "2.2.26",
     "@heroui/autocomplete": "2.3.28",
@@ -117,6 +116,6 @@
     "tailwindcss": "4.1.11",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
-    "typescript": "5.6.3"
+    "typescript": "^6.0.3"
   }
 }

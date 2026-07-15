@@ -12,7 +12,8 @@ import ProductRating from "@/components/single-product/ProductRating";
 import ShareButton from "@/components/single-product/ShareButton";
 import SubmitReview from "@/components/reviews/SubmitReview";
 import ProductReviews from "@/components/reviews/ProductReviews";
-import { currentUser } from "@clerk/nextjs/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import SimilarProducts from "@/components/single-product/SimilarProducts";
 import MarketingLayout from "@/components/layouts/MarketingLayout";
 import TrackView from "@/components/single-product/TrackView";
@@ -38,9 +39,9 @@ export default async function SingleProductsPage({ params }: PageProps) {
   const { name, image, company, description, price } = product;
   const dollarsAmount = formatCurrency(price);
 
-  const user = await currentUser();
+  const session = await getServerSession(authOptions);
   const reviewDoesNotExist =
-    user && !(await findExistingReview(user.id, product.id));
+    session?.user && !(await findExistingReview(session.user.id, product.id));
 
   const muscles = product.productMuscles.map((pm) => pm.muscle);
 

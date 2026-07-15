@@ -4,7 +4,7 @@ import SelectProductAmount from "./SelectProductAmount";
 import { Mode } from "./SelectProductAmount";
 import { SubmitButton } from "../form/Buttons";
 import { addToCartAction } from "@/utils/action";
-import { useAuth } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import { ProductSignButton } from "../form/Buttons";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -18,7 +18,8 @@ const initialState = {
 
 function AddToCart({ productId }: { productId: string }) {
   const [amount, setAmount] = useState(1);
-  const { userId } = useAuth();
+  const { status } = useSession();
+  const isSignedIn = status === "authenticated";
   const router = useRouter();
 
   const [state, formAction] = useFormState(addToCartAction, initialState);
@@ -41,7 +42,7 @@ function AddToCart({ productId }: { productId: string }) {
         amount={amount}
         setAmount={setAmount}
       />
-      {userId ? (
+      {isSignedIn ? (
         <form action={formAction}>
           <input type="hidden" name="productId" value={productId} />
           <input type="hidden" name="amount" value={amount} />

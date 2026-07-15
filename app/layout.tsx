@@ -1,7 +1,5 @@
-// app/layout.tsx (SERVER)
-import "@/styles/globals.css";
+import "../styles/globals.css";
 import Navbar from "@/components/navbar/Navbar";
-import { ClerkProvider } from "@clerk/nextjs";
 import ClientProviders from "./client-providers";
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
@@ -65,17 +63,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider>
-      <html lang="en" className={bebas.className}>
-        <body className="antialiased">
-          <ClientProviders>
-            <Navbar />
-            <AuthToast />
-            {children}
-            <Toaster richColors position="bottom-right" />
-          </ClientProviders>
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en" className={bebas.className}>
+      <body className="antialiased">
+        <ClientProviders>
+          <Navbar />
+          <AuthToast />
+          {children}
+          <Toaster richColors position="bottom-right" />
+        </ClientProviders>
+      </body>
+    </html>
   );
 }

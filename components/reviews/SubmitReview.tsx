@@ -7,7 +7,7 @@ import RatingInput from "./RatingInput";
 import TextAreaInput from "../form/TextAreaInput";
 import { Button } from "@/components/ui/button";
 import { createReviewAction } from "@/utils/action";
-import { useUser } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ActionResult } from "@/utils/app-error";
 import { toast } from "sonner";
@@ -18,7 +18,7 @@ interface SubmitReviewProps {
 
 const SubmitReview = ({ productId }: SubmitReviewProps) => {
   const [isReviewFormVisible, setIsReviewFormVisible] = useState(false);
-  const { user } = useUser();
+  const { data: session } = useSession();
   const router = useRouter();
 
   return (
@@ -50,9 +50,15 @@ const SubmitReview = ({ productId }: SubmitReviewProps) => {
             <input
               type="text"
               name="authorName"
-              value={user?.firstName || "user"}
+              value={session?.user?.name || "user"}
             />
-            <input type="hidden" name="authorImageUrl" value={user?.imageUrl} />
+            {/* NextAuth doesn't split first/last name like Clerk did --
+                using the full name here instead of a first-name-only value. */}
+            <input
+              type="hidden"
+              name="authorImageUrl"
+              value={session?.user?.image || ""}
+            />
             <RatingInput name="rating" labelText="Rating" />
             <TextAreaInput
               name="comment"

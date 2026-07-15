@@ -1,7 +1,8 @@
 "use server";
 
 import db from "@/utils/db";
-import { currentUser, auth } from "@clerk/nextjs/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import {
   imageSchema,
@@ -15,20 +16,25 @@ import { Cart } from "@prisma/client";
 import { ActionResult, AppError } from "./app-error";
 import { FavoriteState } from "./app-error";
 import { Products, Muscle } from "@prisma/client";
+import prisma from "@/utils/db";
 
 const getAuthUser = async () => {
-  const user = await currentUser();
-  if (!user) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) {
     throw new AppError("UNAUTHORIZED", "You must be logged in");
   }
-  return user;
+  // Shape: { id, email, name, image } -- different from Clerk's user
+  // object, notably no .emailAddresses array, just a plain .email string.
+  return session.user;
 };
 
 export default getAuthUser;
 
 const getAdminUser = async () => {
   const user = await getAuthUser();
-  if (user.id !== process.env.NEXT_PUBLIC_ADMIN_USER_ID) redirect("/");
+  // Now compares email rather than a hardcoded ID -- matches the same
+  // change made in middleware.ts, and survives database reseeds.
+  if (user.email !== process.env.ADMIN_EMAIL) redirect("/");
   return user;
 };
 
@@ -57,7 +63,6 @@ export const fetchAllProducts = async ({ search = "" }: { search: string }) => {
 export const fetchSingleProduct = async (productId: string) => {
   const product = await db.products.findUnique({
     where: { id: productId },
-    // Do NOT include 'muscles' — it doesn't exist as a relation
   });
 
   if (!product) return null;
@@ -125,7 +130,7 @@ export const createProduction = async (prevState: any, formData: FormData) => {
         // simple string column
         muscle: muscleGroup,
 
-        // ✅ connectOrCreate for Category (safe)
+        // connectOrCreate for Category (safe)
         category: {
           connectOrCreate: {
             where: {
@@ -137,7 +142,7 @@ export const createProduction = async (prevState: any, formData: FormData) => {
           },
         },
 
-        // ✅ connectOrCreate for muscles (composite unique)
+        // connectOrCreate for muscles (composite unique)
         productMuscles: {
           create: muscleIds.map((id) => ({
             muscle: {
@@ -279,7 +284,8 @@ export const toggleFavorite = async (
   prevState: FavoriteState,
   formData: FormData,
 ): Promise<FavoriteState> => {
-  const { userId } = await auth();
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
 
   if (!userId) {
     return {
@@ -306,7 +312,7 @@ export const toggleFavorite = async (
       };
     }
     const favorite = await db.favorite.create({
-      data: { productId, userId: userId },
+      data: { productId, userId },
     });
 
     return {
@@ -400,7 +406,7 @@ export const deleteReviewAction = async (prevState: { reviewId: string }) => {
 };
 
 export const findExistingReview = async (userId: string, productId: string) =>
-  db.review.findFirst({ where: { userId: userId, productId } });
+  db.review.findFirst({ where: { userId, productId } });
 
 /** CART **/
 
@@ -414,8 +420,8 @@ export const fetchOrCreateCart = async () => {
 };
 
 export const fetchCartItems = async () => {
-  const user = await currentUser().catch(() => null);
-  if (!user) return [];
+  const session = await getServerSession(authOptions).catch(() => null);
+  if (!session?.user) return [];
 
   const cart = await fetchOrCreateCart();
   return db.cartItems.findMany({
@@ -580,7 +586,7 @@ export const createOrderAction = async (formData: FormData) => {
       orderTotal: cart.orderTotal,
       tax: cart.tax,
       shipping: cart.shipping,
-      email: user.emailAddresses[0]?.emailAddress || "no-email@example.com",
+      email: user.email || "no-email@example.com",
       orderItems: {
         create: cartItems.map((item) => ({
           productId: item.productId,
@@ -674,13 +680,7 @@ export const updateCartItemAction = async (formData: FormData) => {
 // action.ts
 export const fetchProductsByMuscle = async (muscle: string) => {
   return db.products.findMany({
-    where: {
-      productMuscles: {
-        some: {
-          muscle: { category: muscle },
-        },
-      },
-    },
+    where: { muscle },
     orderBy: { createdAt: "desc" },
     include: { reviews: true },
   });
@@ -735,15 +735,7 @@ export const fetchFilteredProducts = async ({
           : {},
         minPrice ? { price: { gte: minPrice } } : {},
         maxPrice ? { price: { lte: maxPrice } } : {},
-        category
-          ? {
-              productMuscles: {
-                some: {
-                  muscle: { category },
-                },
-              },
-            }
-          : {},
+        category ? { muscle: category } : {},
       ],
     },
 

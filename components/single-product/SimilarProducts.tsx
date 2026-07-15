@@ -1,6 +1,7 @@
 import { fetchSimilarProducts } from "@/utils/action";
 import ProductsGrid from "../products/ProductsGrid";
-import { currentUser } from "@clerk/nextjs/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 interface Props {
   muscle: string | null;
@@ -28,14 +29,14 @@ export default async function SimilarProducts({
     price: p.price,
   }));
 
-  const user = await currentUser();
+  const session = await getServerSession(authOptions);
 
   return (
     <section className="mt-16">
       <h2 className="text-2xl font-semibold mb-6">Similar Equipment</h2>
       <ProductsGrid
         products={productItems}
-        userId={user?.id || null}
+        userId={session?.user?.id || null}
         favoriteMap={undefined}
       />
     </section>
