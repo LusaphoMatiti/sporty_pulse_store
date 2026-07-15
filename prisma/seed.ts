@@ -325,7 +325,9 @@ const PRODUCTS: ProductSeed[] = [
     description:
       "A durable, looped stretch strap that extends your reach for deeper, safer stretching. The multiple grip loops let you ease into hamstring, shoulder, and hip stretches with control, making it a simple but essential tool for any post-training recovery routine.",
     price: 150, // TODO: confirm price
-    image: imageUrl("Stretch_strap.jpg"), // TODO: this file is not yet in loomora-bucket -- upload it, then confirm this filename matches exactly
+    image: imageUrl(
+      "https://xewudrozihbinbtsihvw.supabase.co/storage/v1/object/public/loomora-bucket/Stretch_strap.jpg",
+    ), // TODO: this file is not yet in loomora-bucket -- upload it, then confirm this filename matches exactly
     featured: false,
     category: "recovery",
     muscle: "recovery",
@@ -339,7 +341,9 @@ const PRODUCTS: ProductSeed[] = [
     description:
       "A supportive compression sleeve that promotes circulation and reduces muscle fatigue during and after training. Consistent, graduated pressure helps ease swelling and soreness, making it a quiet, everyday recovery aid for anyone training regularly.",
     price: 220, // TODO: confirm price
-    image: imageUrl("compression_sleeve.jpg"), // TODO: this file is not yet in loomora-bucket -- upload it, then confirm this filename matches exactly
+    image: imageUrl(
+      "https://xewudrozihbinbtsihvw.supabase.co/storage/v1/object/public/loomora-bucket/compression_sleeve.jpg",
+    ), // TODO: this file is not yet in loomora-bucket -- upload it, then confirm this filename matches exactly
     featured: false,
     category: "recovery",
     muscle: "recovery",
