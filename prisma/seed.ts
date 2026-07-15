@@ -82,7 +82,7 @@ const PRODUCTS: ProductSeed[] = [
     description:
       "A standard 20kg cast iron plate built for serious progressive loading. Whether stacked on a barbell for presses or held for weighted movements, it delivers the dense, stable resistance needed to build real chest and upper-body strength over time. A foundational piece for any home strength setup.",
     price: 800,
-    image: imageUrl("1772635203378-weight_plate.jpg"),
+    image: imageUrl("1767542523631-weight_plate.jpg"),
     featured: false,
     category: "fitness",
     muscle: "upper-body",
@@ -94,7 +94,7 @@ const PRODUCTS: ProductSeed[] = [
     description:
       "A cushioned, non-slip mat that gives you a stable, comfortable surface for yoga, stretching, and floor-based training. The dense foam absorbs impact during core work while the grippy texture holds firm through sweat and movement. Equally at home in a chest-and-core session or a slow, deliberate recovery flow.",
     price: 250,
-    image: imageUrl("1772643111457-Yoga_mat.webp"),
+    image: imageUrl("1772637273304-Yoga_mat.webp"),
     featured: false,
     category: "fitness",
     muscle: "full-body",
@@ -106,9 +106,7 @@ const PRODUCTS: ProductSeed[] = [
     description:
       "A lightweight pair of dumbbells suited to toning work, higher-rep shoulder isolation, and beginner-friendly strength building. Compact enough to keep within reach for spontaneous sessions, they're the easiest entry point into structured resistance training without committing to a full rack.",
     price: 200,
-    image: imageUrl(
-      "https://xewudrozihbinbtsihvw.supabase.co/storage/v1/object/public/loomora-bucket/home_dumbells.jpg",
-    ),
+    image: imageUrl("1772634446303-home_dumbells.jpg"),
     featured: false,
     category: "fitness",
     muscle: "upper-body",
@@ -120,7 +118,7 @@ const PRODUCTS: ProductSeed[] = [
     description:
       "A versatile 12kg kettlebell built for swings, squats, presses, and full-body conditioning circuits. Its offset center of mass challenges stability and grip in ways a standard dumbbell can't, making it a staple for building explosive power through the shoulders and legs alike.",
     price: 600,
-    image: imageUrl("1772640419333-Kettlebells.png"),
+    image: imageUrl("1772635860054-Kettlebells.png"),
     featured: true,
     category: "fitness",
     muscle: "full-body",
@@ -132,7 +130,7 @@ const PRODUCTS: ProductSeed[] = [
     description:
       "A shifting-load sandbag that forces your stabilizer muscles to work overtime with every rep. Unlike fixed weights, the internal filler moves unpredictably as you carry, press, or squat, building functional strength and control that transfers directly to real-world movement.",
     price: 650,
-    image: imageUrl("1772636784831-Sandbag.webp"),
+    image: imageUrl("1772640890934-Sandbag.webp"),
     featured: false,
     category: "fitness",
     muscle: "full-body",
@@ -156,9 +154,7 @@ const PRODUCTS: ProductSeed[] = [
     description:
       "Freestanding parallel bars purpose-built for dips, push-ups, and controlled leg raises. The stable, elevated grip lets you load bodyweight-only movements far more effectively than the floor, making it one of the most efficient tools for building arm and tricep strength at home.",
     price: 1400,
-    image: imageUrl(
-      "https://xewudrozihbinbtsihvw.supabase.co/storage/v1/object/public/loomora-bucket/dip%20bars.webp",
-    ),
+    image: imageUrl("1767536651134-Dip_bars.avif"),
     featured: false,
     category: "fitness",
     muscle: "upper-body",
@@ -170,7 +166,7 @@ const PRODUCTS: ProductSeed[] = [
     description:
       "A deceptively simple rolling wheel that exposes weak links in your core fast. Rolling out under control builds deep abdominal and stabilizer strength that crunches alone can't reach, making it one of the highest-return tools for genuine core conditioning.",
     price: 200,
-    image: imageUrl("1772637459001-ab_wheel.jpg"),
+    image: imageUrl("1772570329516-ab_wheel.jpg"),
     featured: false,
     category: "fitness",
     muscle: "core",
@@ -182,7 +178,7 @@ const PRODUCTS: ProductSeed[] = [
     description:
       "A weighted ball built for slams, throws, and rotational core training. The added mass turns simple movements into powerful, explosive core work, developing the rotational strength and power transfer that flat, static core exercises tend to miss entirely.",
     price: 650,
-    image: imageUrl("1772638079743-Medicine_ball.png"),
+    image: imageUrl("1767542652257-Medicine_ball.png"),
     featured: false,
     category: "fitness",
     muscle: "core",
@@ -206,7 +202,7 @@ const PRODUCTS: ProductSeed[] = [
     description:
       "Low-friction discs that add a sliding, controlled resistance element to core exercises. The instability they introduce forces your core to work continuously through the full range of motion, turning familiar movements like mountain climbers and plank slides into serious core builders.",
     price: 100,
-    image: imageUrl("1772639698667-slider_discs.avif"),
+    image: imageUrl("1767538148476-slider_discs.avif"),
     featured: false,
     category: "fitness",
     muscle: "core",
@@ -218,7 +214,7 @@ const PRODUCTS: ProductSeed[] = [
     description:
       "Adjustable ankle weights that add extra resistance to leg lifts, cardio drills, and lower-body conditioning work. Secure, low-profile straps keep them locked in place through fast movement, making them an easy way to progressively overload leg-focused training without extra equipment.",
     price: 200,
-    image: imageUrl("1772640683183-ankle_weights.jpg"),
+    image: imageUrl("1772634151122-ankle_weights.jpg"),
     featured: false,
     category: "fitness",
     muscle: "lower-body",
@@ -230,7 +226,7 @@ const PRODUCTS: ProductSeed[] = [
     description:
       "A speed rope built for fast, efficient cardio and footwork conditioning. Just minutes of skipping raises the heart rate and sharpens coordination in a way few other tools can match, making it one of the most compact and effective full-body warm-up or finisher options available.",
     price: 100,
-    image: imageUrl("1772641087810-skipping-rope.avif"),
+    image: imageUrl("1772568249311-skipping-rope.avif"),
     featured: false,
     category: "fitness",
     muscle: "full-body",
@@ -242,9 +238,7 @@ const PRODUCTS: ProductSeed[] = [
     description:
       "A firm foam roller for self-myofascial release and post-workout recovery. Rolling out tight muscles after training helps ease soreness, restore range of motion, and speed up recovery between sessions -- an essential companion to any serious full-body training routine.",
     price: 350,
-    image: imageUrl(
-      "https://xewudrozihbinbtsihvw.supabase.co/storage/v1/object/public/loomora-bucket/soft-massaging-foam-roller-blue.avif",
-    ),
+    image: imageUrl("1767538937346-soft-massaging-foam-roller-blue.avif"),
     featured: false,
     category: "recovery",
     muscle: "recovery",
@@ -268,7 +262,7 @@ const PRODUCTS: ProductSeed[] = [
     description:
       "A small, firm ball designed for targeted trigger-point release. Its size lets you reach tight, specific spots that larger recovery tools can't -- shoulders, feet, glutes -- delivering precise pressure exactly where you need it after a demanding session.",
     price: 120,
-    image: imageUrl("1772642140059-small-massage-ball-black.avif"),
+    image: imageUrl("1767539124681-small-massage-ball-black.avif"),
     featured: false,
     category: "recovery",
     muscle: "recovery",
@@ -280,7 +274,7 @@ const PRODUCTS: ProductSeed[] = [
     description:
       "A percussive massage device that delivers fast, deep recovery exactly where muscles need it most. Multiple speed settings and interchangeable heads let you dial in pressure for anything from a light pre-workout activation to deep post-session muscle release.",
     price: 1200,
-    image: imageUrl("1772642436042-Massage_gun.jpg"),
+    image: imageUrl("1767539258614-Massage_gun.jpg"),
     featured: false,
     category: "recovery",
     muscle: "recovery",
@@ -330,9 +324,7 @@ const PRODUCTS: ProductSeed[] = [
     description:
       "A durable, looped stretch strap that extends your reach for deeper, safer stretching. The multiple grip loops let you ease into hamstring, shoulder, and hip stretches with control, making it a simple but essential tool for any post-training recovery routine.",
     price: 150, // TODO: confirm price
-    image: imageUrl(
-      "https://xewudrozihbinbtsihvw.supabase.co/storage/v1/object/public/loomora-bucket/Stretch_strap.jpg",
-    ), // TODO: replace with real Cloudinary filename
+    image: imageUrl("Stretch_strap.jpg"), // TODO: this file is not yet in loomora-bucket -- upload it, then confirm this filename matches exactly
     featured: false,
     category: "recovery",
     muscle: "recovery",
@@ -346,9 +338,7 @@ const PRODUCTS: ProductSeed[] = [
     description:
       "A supportive compression sleeve that promotes circulation and reduces muscle fatigue during and after training. Consistent, graduated pressure helps ease swelling and soreness, making it a quiet, everyday recovery aid for anyone training regularly.",
     price: 220, // TODO: confirm price
-    image: imageUrl(
-      "https://xewudrozihbinbtsihvw.supabase.co/storage/v1/object/public/loomora-bucket/compression_sleeve.jpg",
-    ), // TODO: replace with real Cloudinary filename
+    image: imageUrl("compression_sleeve.jpg"), // TODO: this file is not yet in loomora-bucket -- upload it, then confirm this filename matches exactly
     featured: false,
     category: "recovery",
     muscle: "recovery",
