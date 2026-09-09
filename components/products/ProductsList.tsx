@@ -1,6 +1,5 @@
 import { formatCurrency } from "@/utils/format";
 import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
 import FavoriteToggleButtonClient from "./FavoriteToggleButtonClient";
 
@@ -25,43 +24,53 @@ type ProductsListProps = {
 
 const ProductsList = ({ products, userId }: ProductsListProps) => {
   return (
-    <div className="mt-12 grid gap-y-8">
+    <div className="mt-12 divide-y divide-neutral-200 border-t border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
       {products.map((product) => {
         const { name, price, image, company, id, favoriteId } = product;
-        const dollarsAmount = formatCurrency(price);
+        const formattedPrice = formatCurrency(price);
 
         return (
           <article key={id} className="group relative">
-            <Link href={`/products/${id}`}>
-              <Card className="transform group-hover:shadow-xl transition-shadow duration">
-                <CardContent className="p-8 gap-y-4 grid md:grid-cols-3">
-                  <div className="relative h-64 md:h-48 md:w-48">
-                    <Image
-                      src={image}
-                      alt={name}
-                      fill
-                      sizes="(max-width:768px) 100vw, (max-width:1200px) 50vw, 33vw"
-                      priority
-                      className="w-full rounded object-cover"
-                    />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-semibold capitalize">{name}</h2>
-                    <h4 className="text-muted-foreground">{company}</h4>
-                  </div>
-                  <p className="text-muted-foreground text-lg md:ml-auto">
-                    {dollarsAmount}
-                  </p>
-                </CardContent>
-              </Card>
+            <Link
+              href={`/products/${id}`}
+              className="flex items-center gap-6 py-6 pr-14 md:gap-10"
+            >
+              <div className="relative h-28 w-28 flex-shrink-0 overflow-hidden bg-neutral-50 md:h-36 md:w-36 dark:bg-neutral-900">
+                <Image
+                  src={image}
+                  alt={name}
+                  fill
+                  sizes="(max-width:768px) 112px, 144px"
+                  className="object-contain transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                />
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <h2 className="truncate text-base font-medium text-neutral-900 dark:text-neutral-100">
+                  {name}
+                </h2>
+                <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+                  {company}
+                </p>
+              </div>
+
+              <p className="flex-shrink-0 text-base text-neutral-900 dark:text-neutral-100">
+                {formattedPrice}
+              </p>
             </Link>
-            <div className="absolute bottom-8 right-8 z-10 bg-white border-2 border-gray-300 rounded-lg p-1">
-              <FavoriteToggleButtonClient
-                userId={userId}
-                favoriteId={favoriteId}
-                productId={id}
-              />
-            </div>
+
+            {userId && (
+              <div
+                className="absolute right-0 top-1/2 -translate-y-1/2"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <FavoriteToggleButtonClient
+                  userId={userId}
+                  favoriteId={favoriteId}
+                  productId={id}
+                />
+              </div>
+            )}
           </article>
         );
       })}

@@ -58,8 +58,6 @@ type ProductsGridProps = {
 
 const ProductsGrid = ({ products, userId }: ProductsGridProps) => {
   const [page, setPage] = useState(0);
-  const sc = useScreenTier();
-
   const screenTier = useScreenTier();
 
   const ITEMS_PER_PAGE =
@@ -72,23 +70,29 @@ const ProductsGrid = ({ products, userId }: ProductsGridProps) => {
   }, [products.length]);
 
   return (
-    <div className="pt-12 space-y-8">
+    <div className="pt-10 space-y-10">
       {totalPages > 1 && (
-        <div className="flex justify-between items-center  gap-6">
+        <div className="flex items-center justify-end gap-2">
           <Button
             onClick={() => setPage((p) => Math.max(p - 1, 0))}
             disabled={page === 0}
             variant="outline"
+            size="icon"
+            aria-label="Previous products"
+            className="rounded-none border-neutral-300 text-neutral-700 hover:border-neutral-900 hover:bg-transparent hover:text-neutral-900 dark:border-neutral-700 dark:text-neutral-300 dark:hover:border-neutral-100 dark:hover:text-neutral-100"
           >
-            ← Prev
+            ←
           </Button>
 
           <Button
             onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
             disabled={page === totalPages - 1}
             variant="outline"
+            size="icon"
+            aria-label="Next products"
+            className="rounded-none border-neutral-300 text-neutral-700 hover:border-neutral-900 hover:bg-transparent hover:text-neutral-900 dark:border-neutral-700 dark:text-neutral-300 dark:hover:border-neutral-100 dark:hover:text-neutral-100"
           >
-            Next →
+            →
           </Button>
         </div>
       )}
@@ -112,65 +116,48 @@ const ProductsGrid = ({ products, userId }: ProductsGridProps) => {
             return (
               <div
                 key={slideIndex}
-                className=" grid
-  gap-6
-  grid-cols-1
-  sm:grid-cols-2
-  lg:grid-cols-3
-  place-items-center
-  lg:place-items-start
-"
+                className="grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3"
               >
                 {slideProducts.map((product) => {
                   const { id, name, price, image, favoriteId } = product;
                   const formattedPrice = formatCurrency(price);
 
                   return (
-                    <article
-                      key={id}
-                      className="group relative w-full max-w-[320px] sm:max-w-[420px] lg:max-w-[360px]"
-                    >
+                    <article key={id} className="group relative">
                       <Link href={`/equipments/${id}`}>
-                        <div className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-black transition hover:shadow-md">
-                          {" "}
-                          <div className="relative aspect-square w-full overflow-hidden bg-white">
-                            {" "}
-                            <Image
-                              src={image}
-                              alt={name}
-                              fill
-                              sizes="(max-width:768px) 100vw, (max-width:1200px) 50vw, 33vw"
-                              className="object-contain transition-transform duration-300 group-hover:scale-105"
-                            />{" "}
-                          </div>{" "}
-                          <div className="p-4 space-y-2 text-left">
-                            {" "}
-                            <h2 className="text-sm font-medium leading-snug line-clamp-2">
-                              {name}
-                            </h2>{" "}
-                            <div className="flex items-center gap-1 text-sm text-yellow-500">
-                              <span>⭐ {product.rating}</span>
-                              <span className="text-gray-500">
-                                (
-                                {product.reviewCount
-                                  ? product.reviewCount
-                                  : "0"}
-                                )
-                              </span>
-                            </div>
-                            <p className="text-sm text-muted-foreground leading-snug">
-                              {truncateWords(product.description ?? "", 8)}
-                            </p>
-                            <p className="pt-2 text-lg font-bold text-gray-900 dark:text-gray-100">
+                        <div className="relative aspect-[4/5] w-full overflow-hidden bg-neutral-50 dark:bg-neutral-900">
+                          <Image
+                            src={image}
+                            alt={name}
+                            fill
+                            sizes="(max-width:768px) 100vw, (max-width:1200px) 50vw, 33vw"
+                            className="object-contain transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                          />
+                        </div>
+
+                        <div className="pt-4 space-y-1.5 text-left">
+                          <h2 className="text-sm font-medium leading-snug text-neutral-900 line-clamp-2 sm:text-base dark:text-neutral-100">
+                            {name}
+                          </h2>
+
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-sm text-neutral-900 sm:text-base dark:text-neutral-100">
                               {formattedPrice}
                             </p>
-                          </div>{" "}
+
+                            {typeof product.rating === "number" && (
+                              <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                                {product.rating.toFixed(1)} (
+                                {product.reviewCount ?? 0})
+                              </p>
+                            )}
+                          </div>
                         </div>
                       </Link>
 
                       {userId && (
                         <div
-                          className="absolute top-3 right-3 z-10"
+                          className="absolute right-3 top-3 z-10"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <FavoriteToggleButtonClient
@@ -193,7 +180,3 @@ const ProductsGrid = ({ products, userId }: ProductsGridProps) => {
 };
 
 export default ProductsGrid;
-
-function truncateWords(text: string, count = 8) {
-  return text.split(" ").slice(0, count).join(" ") + "…";
-}

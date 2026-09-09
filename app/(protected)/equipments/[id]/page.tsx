@@ -1,6 +1,5 @@
 import BreadCrumbs from "@/components/single-product/BreadCrumbs";
 import {
-  fetchSingleProduct,
   fetchSingleProductWithMuscles,
   findExistingReview,
 } from "@/utils/action";
@@ -18,7 +17,6 @@ import SimilarProducts from "@/components/single-product/SimilarProducts";
 import MarketingLayout from "@/components/layouts/MarketingLayout";
 import TrackView from "@/components/single-product/TrackView";
 import Trainer from "@/components/global/Trainer";
-import { Muscle } from "@prisma/client";
 
 interface PageProps {
   params: Promise<{ id: string }>;

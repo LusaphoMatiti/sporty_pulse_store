@@ -21,7 +21,10 @@ export default async function FeaturedProducts() {
   );
 
   return (
-    <section className="pt-8" aria-labelledby="featured-products-title">
+    <section
+      className="pt-16 md:pt-24"
+      aria-labelledby="featured-products-title"
+    >
       <div id="featured-products-title">
         <SectionTitle text="Featured Equipment" />
       </div>
