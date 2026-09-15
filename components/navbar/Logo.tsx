@@ -6,11 +6,7 @@ const Logo = () => {
   return (
     <div>
       <Link href="/" className="">
-        <img
-          className="w-10 h-10"
-          src="/lemon-squeezer.png"
-          alt="sporty pulse"
-        />
+        <img className="w-14 h-14" src="/logo.png" alt="sporty pulse" />
       </Link>
     </div>
   );

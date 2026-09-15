@@ -17,21 +17,14 @@ export default async function HomePage() {
   return (
     <MarketingLayout>
       <Hero />
-      <div className="pt-5 sm:px-10">
-        <ShopByCategory />
-      </div>
-      <div className="mt-3 sm:mt-3">
-        <WorkOut
-          video="https://res.cloudinary.com/dsoxsrjn2/video/upload/f_auto,q_auto,w_1920/homeworkout_2_mwfnpw.mp4"
-          quote="No gym. No excuses. Just work."
-        />
-      </div>
-
       <Suspense fallback={<LoadingContainer />}>
         <Container className="py-10 px-10 sm:py-5">
           <FeaturedProducts />
         </Container>
       </Suspense>
+      <div className="pt-5 sm:px-10">
+        <ShopByCategory />
+      </div>
     </MarketingLayout>
   );
 }

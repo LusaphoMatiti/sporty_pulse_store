@@ -12,7 +12,7 @@ export default function Search({ onOpen }: Props) {
     <Button
       variant="outline"
       size="icon"
-      className="cursor-pointer"
+      className="cursor-pointer bg-black text-white hover:bg-neutral-800 hover:text-white border-0"
       onClick={onOpen}
       aria-label="Open search"
     >

@@ -21,7 +21,7 @@ export default function ModeToggle() {
         <Button
           variant="outline"
           size="icon"
-          className="cursor-pointer"
+          className="cursor-pointer bg-black text-white hover:bg-neutral-800 hover:text-white border-0"
           aria-label="Toggle dark mode"
         >
           <SunIcon className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />

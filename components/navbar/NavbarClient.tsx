@@ -18,7 +18,7 @@ export default function NavbarClient({ numItemsInCart }: Props) {
     <div className="flex gap-3 items-center">
       {/* Desktop only */}
 
-      <div className="hidden lg:flex items-center gap-3">
+      <div className="hidden bg-black lg:flex items-center gap-3">
         <Search onOpen={() => setSearchOpen(true)} />
         <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
         <CartButton numItemsInCart={numItemsInCart} />

@@ -63,7 +63,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={bebas.className}>
+    <html lang="en" className={bebas.className} suppressHydrationWarning>
       <body className="antialiased">
         <ClientProviders>
           <Navbar />

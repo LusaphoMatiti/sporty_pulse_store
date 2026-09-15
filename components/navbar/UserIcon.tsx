@@ -21,7 +21,7 @@ export default function UserIcon() {
   return (
     <LuUser
       size={50}
-      className="w-6 h-6 bg-gray-300 dark:bg-gray-600 text-white rounded-full p-1"
+      className="w-6 h-6 bg-black text-white hover:bg-neutral-800 hover:text-white rounded-full p-1 border-0"
     />
   );
 }

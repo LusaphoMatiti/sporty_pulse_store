@@ -70,9 +70,9 @@ const ProductsGrid = ({ products, userId }: ProductsGridProps) => {
   }, [products.length]);
 
   return (
-    <div className="pt-10 space-y-10">
+    <div className="pt-4 pb-6">
       {totalPages > 1 && (
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center justify-end gap-2 mb-3">
           <Button
             onClick={() => setPage((p) => Math.max(p - 1, 0))}
             disabled={page === 0}
@@ -116,7 +116,7 @@ const ProductsGrid = ({ products, userId }: ProductsGridProps) => {
             return (
               <div
                 key={slideIndex}
-                className="grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3"
+                className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3"
               >
                 {slideProducts.map((product) => {
                   const { id, name, price, image, favoriteId } = product;
@@ -125,7 +125,7 @@ const ProductsGrid = ({ products, userId }: ProductsGridProps) => {
                   return (
                     <article key={id} className="group relative">
                       <Link href={`/equipments/${id}`}>
-                        <div className="relative aspect-[4/5] w-full overflow-hidden bg-neutral-50 dark:bg-neutral-900">
+                        <div className="relative h-[24vh] sm:h-[30vh] lg:h-[36vh] w-full overflow-hidden bg-neutral-50 dark:bg-neutral-900">
                           <Image
                             src={image}
                             alt={name}
@@ -135,8 +135,8 @@ const ProductsGrid = ({ products, userId }: ProductsGridProps) => {
                           />
                         </div>
 
-                        <div className="pt-4 space-y-1.5 text-left">
-                          <h2 className="text-sm font-medium leading-snug text-neutral-900 line-clamp-2 sm:text-base dark:text-neutral-100">
+                        <div className="pt-2 space-y-1 text-left">
+                          <h2 className="text-sm font-medium leading-snug text-neutral-900 line-clamp-1 sm:text-base dark:text-neutral-100">
                             {name}
                           </h2>
 

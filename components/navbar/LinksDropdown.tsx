@@ -30,7 +30,7 @@ function LinksDropdown() {
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
-          className="flex gap-4 max-w-[100px]  cursor-pointer"
+          className="flex gap-4 max-w-[100px] text-white hover:text-black bg-black  cursor-pointer"
           aria-label="User menu"
         >
           <LuAlignLeft className="w-6 h-6 " />
