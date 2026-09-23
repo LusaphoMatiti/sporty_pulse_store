@@ -9,26 +9,26 @@ import SearchOverlay from "./SearchOverlay";
 
 type Props = {
   numItemsInCart: number;
+  isDark: boolean;
 };
 
-export default function NavbarClient({ numItemsInCart }: Props) {
+export default function NavbarClient({ numItemsInCart, isDark }: Props) {
   const [searchOpen, setSearchOpen] = useState(false);
+  const textColor = isDark ? "text-white" : "text-neutral-900";
 
   return (
     <div className="flex gap-3 items-center">
-      {/* Desktop only */}
-
-      <div className="hidden bg-black lg:flex items-center gap-3">
-        <Search onOpen={() => setSearchOpen(true)} />
-        <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
-        <CartButton numItemsInCart={numItemsInCart} />
-        <ModeToggle />
+      <div className={`hidden lg:flex items-center gap-3 transition-colors duration-300 ${textColor}`}>
+        <Search onOpen={() => setSearchOpen(true)} isDark={isDark} />
+        <CartButton numItemsInCart={numItemsInCart} isDark={isDark} />
+        <ModeToggle isDark={isDark} />
       </div>
 
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
 
-      {/* LinksDropdown always visible */}
-      <LinksDropdown />
+      <div className={`transition-colors duration-300 ${textColor}`}>
+        <LinksDropdown isDark={isDark} />
+      </div>
     </div>
   );
 }

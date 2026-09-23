@@ -1,43 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { formatCurrency } from "@/utils/format";
 import Link from "next/link";
 import Image from "next/image";
 import FavoriteToggleButtonClient from "./FavoriteToggleButtonClient";
-import { Button } from "../ui/button";
-
-function useScreenTier() {
-  const [tier, setTier] = useState<"mobile" | "tablet" | "desktop">("mobile");
-
-  useEffect(() => {
-    const mqMobile = window.matchMedia("(max-width: 639px)");
-    const mqTablet = window.matchMedia(
-      "(min-width: 640px) and (max-width: 1023px)",
-    );
-    const mqDesktop = window.matchMedia("(min-width: 1024px)");
-
-    const update = () => {
-      if (mqDesktop.matches) setTier("desktop");
-      else if (mqTablet.matches) setTier("tablet");
-      else setTier("mobile");
-    };
-
-    update();
-
-    mqMobile.addEventListener("change", update);
-    mqTablet.addEventListener("change", update);
-    mqDesktop.addEventListener("change", update);
-
-    return () => {
-      mqMobile.removeEventListener("change", update);
-      mqTablet.removeEventListener("change", update);
-      mqDesktop.removeEventListener("change", update);
-    };
-  }, []);
-
-  return tier;
-}
 
 export type ProductItem = {
   id: string;
@@ -54,128 +20,71 @@ type ProductsGridProps = {
   products: ProductItem[];
   userId: string | null;
   favoriteMap?: Record<string, string | null>;
+  limit?: number;
 };
 
-const ProductsGrid = ({ products, userId }: ProductsGridProps) => {
-  const [page, setPage] = useState(0);
-  const screenTier = useScreenTier();
+const ITEMS_TO_SHOW = 4;
 
-  const ITEMS_PER_PAGE =
-    screenTier === "desktop" ? 3 : screenTier === "tablet" ? 2 : 1;
-
-  const totalPages = Math.ceil(products.length / ITEMS_PER_PAGE);
-
-  useEffect(() => {
-    setPage(0);
-  }, [products.length]);
+const ProductsGrid = ({ products, userId, limit }: ProductsGridProps) => {
+  const visibleProducts = limit ? products.slice(0, limit) : products;
 
   return (
-    <div className="pt-4 pb-6">
-      {totalPages > 1 && (
-        <div className="flex items-center justify-end gap-2 mb-3">
-          <Button
-            onClick={() => setPage((p) => Math.max(p - 1, 0))}
-            disabled={page === 0}
-            variant="outline"
-            size="icon"
-            aria-label="Previous products"
-            className="rounded-none border-neutral-300 text-neutral-700 hover:border-neutral-900 hover:bg-transparent hover:text-neutral-900 dark:border-neutral-700 dark:text-neutral-300 dark:hover:border-neutral-100 dark:hover:text-neutral-100"
-          >
-            ←
-          </Button>
+    <section data-nav-theme="light">
+      <div className="pt-4 pb-6">
+        {limit && products.length > limit && (
+          <div className="w-full text-right mb-3">
+            <Link
+              href="/featured-products"
+              className="text-sm font-medium text-neutral-700 underline-offset-4 hover:underline dark:text-neutral-300 dark:hover:text-neutral-100"
+            >
+              View all →
+            </Link>
+          </div>
+        )}
 
-          <Button
-            onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
-            disabled={page === totalPages - 1}
-            variant="outline"
-            size="icon"
-            aria-label="Next products"
-            className="rounded-none border-neutral-300 text-neutral-700 hover:border-neutral-900 hover:bg-transparent hover:text-neutral-900 dark:border-neutral-700 dark:text-neutral-300 dark:hover:border-neutral-100 dark:hover:text-neutral-100"
-          >
-            →
-          </Button>
-        </div>
-      )}
-
-      {/* SLIDER VIEWPORT */}
-      <div className="overflow-hidden">
-        {/* SLIDER TRACK */}
-        <div
-          className="grid grid-flow-col auto-cols-[100%] transition-transform duration-500 ease-out"
-          style={{
-            transform: `translateX(-${page * 100}%)`,
-          }}
-        >
-          {/* SLIDES */}
-          {Array.from({ length: totalPages }).map((_, slideIndex) => {
-            const slideProducts = products.slice(
-              slideIndex * ITEMS_PER_PAGE,
-              slideIndex * ITEMS_PER_PAGE + ITEMS_PER_PAGE,
-            );
+        <div className="grid grid-cols-2 gap-x-6 gap-y-4 lg:grid-cols-4">
+          {visibleProducts.map((product) => {
+            const { id, name, price, image, favoriteId } = product;
+            const formattedPrice = formatCurrency(price);
 
             return (
-              <div
-                key={slideIndex}
-                className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3"
-              >
-                {slideProducts.map((product) => {
-                  const { id, name, price, image, favoriteId } = product;
-                  const formattedPrice = formatCurrency(price);
+              <article key={id} className="group relative">
+                <Link href={`/equipments/${id}`}>
+                  <div className="relative w-full aspect-square lg:aspect-[4/3] overflow-hidden  bg-neutral-100 dark:bg-neutral-950">
+                    <Image
+                      src={image}
+                      alt={name}
+                      fill
+                      sizes="(max-width:1023px) 50vw, 25vw"
+                      className="object-contain p-2 transition-transform duration-500 ease-out group-hover:scale-[1.03] "
+                    />
+                  </div>
 
-                  return (
-                    <article key={id} className="group relative">
-                      <Link href={`/equipments/${id}`}>
-                        <div className="relative h-[24vh] sm:h-[30vh] lg:h-[36vh] w-full overflow-hidden bg-neutral-50 dark:bg-neutral-900">
-                          <Image
-                            src={image}
-                            alt={name}
-                            fill
-                            sizes="(max-width:768px) 100vw, (max-width:1200px) 50vw, 33vw"
-                            className="object-contain transition-transform duration-500 ease-out group-hover:scale-[1.03]"
-                          />
-                        </div>
+                  <div className="pt-2 space-y-1 text-left">
+                    <h2 className="text-base font-medium leading-snug text-neutral-900 line-clamp-1 sm:text-lg lg:text-sm xl:text-sm dark:text-neutral-100">
+                      {name}
+                    </h2>
 
-                        <div className="pt-2 space-y-1 text-left">
-                          <h2 className="text-sm font-medium leading-snug text-neutral-900 line-clamp-1 sm:text-base dark:text-neutral-100">
-                            {name}
-                          </h2>
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm text-neutral-900 sm:text-base lg:text-xs xl:text-xs dark:text-neutral-100">
+                        {formattedPrice}
+                      </p>
 
-                          <div className="flex items-center justify-between gap-3">
-                            <p className="text-sm text-neutral-900 sm:text-base dark:text-neutral-100">
-                              {formattedPrice}
-                            </p>
-
-                            {typeof product.rating === "number" && (
-                              <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                                {product.rating.toFixed(1)} (
-                                {product.reviewCount ?? 0})
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </Link>
-
-                      {userId && (
-                        <div
-                          className="absolute right-3 top-3 z-10"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <FavoriteToggleButtonClient
-                            userId={userId}
-                            favoriteId={favoriteId ?? null}
-                            productId={id}
-                          />
-                        </div>
+                      {typeof product.rating === "number" && (
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                          {product.rating.toFixed(1)} (
+                          {product.reviewCount ?? 0})
+                        </p>
                       )}
-                    </article>
-                  );
-                })}
-              </div>
+                    </div>
+                  </div>
+                </Link>
+              </article>
             );
           })}
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

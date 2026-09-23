@@ -12,18 +12,29 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export default function ModeToggle() {
+type Props = { isDark: boolean };
+
+export default function ModeToggle({ isDark }: Props) {
   const { setTheme } = useTheme();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="outline"
+          variant="ghost"
           size="icon"
-          className="cursor-pointer bg-black text-white hover:bg-neutral-800 hover:text-white border-0"
           aria-label="Toggle dark mode"
+          className={`bg-transparent transition-colors duration-300 ${
+            isDark
+              ? "text-white hover:bg-neutral-800 hover:text-white"
+              : "text-neutral-900 hover:bg-neutral-200 hover:text-neutral-900"
+          }`}
         >
+          {/*
+            Icons use `currentColor` (inherited from the button) so they flip
+            with isDark. The `dark:` variant here is from next-themes and only
+            controls WHICH icon is visible — it does NOT set color.
+          */}
           <SunIcon className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <MoonIcon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
           <span className="sr-only">Toggle theme</span>

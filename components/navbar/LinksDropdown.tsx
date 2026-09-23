@@ -16,12 +16,10 @@ import UserIcon from "./UserIcon";
 import Link from "next/link";
 import SignOutLink from "./SignOutLink";
 
-function LinksDropdown() {
+function LinksDropdown({ isDark }: { isDark: boolean }) {
   const router = useRouter();
   const { data: session, status } = useSession();
 
-  // NEXT_PUBLIC_ prefix required here since this runs client-side --
-  // matches how the original admin check was also exposed this way.
   const isAdmin = session?.user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
   const isSignedIn = status === "authenticated";
 
@@ -29,17 +27,20 @@ function LinksDropdown() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="outline"
-          className="flex gap-4 max-w-[100px] text-white hover:text-black bg-black  cursor-pointer"
-          aria-label="User menu"
+          variant="ghost"
+          className={`flex cursor-pointer gap-2 !bg-transparent transition-colors duration-300 ${
+            isDark
+              ? "!text-white hover:!bg-neutral-800 hover:!text-white"
+              : "!text-neutral-900 hover:!bg-neutral-200 hover:!text-neutral-900"
+          }`}
         >
-          <LuAlignLeft className="w-6 h-6 " />
-          <UserIcon />
+          <LuAlignLeft className="h-6 w-6" />
+          <UserIcon isDark={isDark} />
         </Button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
-        className="w-40 shadow-lg rounded-md"
+        className="w-40 rounded-md shadow-lg"
         align="start"
         sideOffset={10}
       >
@@ -61,12 +62,11 @@ function LinksDropdown() {
           <>
             {links.map((link) => {
               if (link.label === "dashboard" && !isAdmin) return null;
-
               return (
                 <DropdownMenuItem
                   key={link.href}
                   onClick={() => router.push(link.href)}
-                  className="capitalize w-full cursor-pointer tracking-wider sm:leading-loose "
+                  className="w-full cursor-pointer capitalize tracking-wider sm:leading-loose"
                 >
                   {link.label}
                 </DropdownMenuItem>

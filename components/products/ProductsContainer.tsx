@@ -21,17 +21,19 @@ export default async function ProductsContainer({
     products.map(async (product) => {
       const favoriteId = userId ? await fetchFavoriteId(product.id) : null;
       return { ...product, favoriteId };
-    })
+    }),
   );
 
   return (
     <>
-      <ProductsHeader totalProducts={products.length} />
-      {layout === "grid" ? (
-        <ProductsGrid products={productsWithFavorite} userId={userId} />
-      ) : (
-        <ProductsList products={productsWithFavorite} userId={userId} />
-      )}
+      <section data-nav-theme="light">
+        <ProductsHeader totalProducts={products.length} />
+        {layout === "grid" ? (
+          <ProductsGrid products={productsWithFavorite} userId={userId} />
+        ) : (
+          <ProductsList products={productsWithFavorite} userId={userId} />
+        )}
+      </section>
     </>
   );
 }

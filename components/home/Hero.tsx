@@ -4,7 +4,10 @@ import Link from "next/link";
 
 const Hero = () => {
   return (
-    <main className="relative w-full min-h-[60vh] sm:min-h-[65vh] lg:min-h-[60vh] overflow-hidden flex text-center justify-center ">
+    <main
+      className="relative w-full min-h-[60vh] sm:min-h-[65vh] lg:min-h-[60vh] overflow-hidden flex text-center justify-center "
+      data-nav-theme="dark"
+    >
       <Image
         src="/sportsman.jpg"
         alt="Training"

@@ -18,44 +18,46 @@ export default function ProductsHeader({ totalProducts }: ProductsHeaderProps) {
 
   return (
     <>
-      <div className="flex justify-between items-center">
-        <div>
-          <h4 className="font-medium text-lg">
-            {totalProducts} product{totalProducts > 1 && "s"}
-          </h4>
-        </div>
+      <section data-nav-theme="light">
+        <div className="flex justify-between items-center">
+          <div>
+            <h4 className="font-medium text-lg">
+              {totalProducts} product{totalProducts > 1 && "s"}
+            </h4>
+          </div>
 
-        <div className="flex gap-x-4">
-          <Button
-            size="icon"
-            asChild
-            className={
-              layout === "grid"
-                ? "bg-primary dark:text-black"
-                : "bg-muted text-black dark:text-white hover:text-white"
-            }
-          >
-            <Link href={`/products?layout=grid${searchTerm}`}>
-              <LuLayoutGrid />
-            </Link>
-          </Button>
+          <div className="flex gap-x-4">
+            <Button
+              size="icon"
+              asChild
+              className={
+                layout === "grid"
+                  ? "bg-primary dark:text-black"
+                  : "bg-muted text-black dark:text-white hover:text-white"
+              }
+            >
+              <Link href={`/products?layout=grid${searchTerm}`}>
+                <LuLayoutGrid />
+              </Link>
+            </Button>
 
-          <Button
-            size="icon"
-            asChild
-            className={
-              layout === "list"
-                ? "bg-primary dark:text-black"
-                : "bg-muted text-black dark:text-white hover:text-white"
-            }
-          >
-            <Link href={`/products?layout=list${searchTerm}`}>
-              <LuList />
-            </Link>
-          </Button>
+            <Button
+              size="icon"
+              asChild
+              className={
+                layout === "list"
+                  ? "bg-primary dark:text-black"
+                  : "bg-muted text-black dark:text-white hover:text-white"
+              }
+            >
+              <Link href={`/products?layout=list${searchTerm}`}>
+                <LuList />
+              </Link>
+            </Button>
+          </div>
         </div>
-      </div>
-      <Separator className="my-6 bg-gray-300 h-[1.5px]" />
+        <Separator className="my-6 bg-gray-300 h-[1.5px]" />
+      </section>
     </>
   );
 }

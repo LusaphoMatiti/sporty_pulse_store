@@ -13,7 +13,7 @@ export default async function ProductsPage() {
     <MarketingLayout>
       <BreadCrumbs />
       <Suspense fallback={<LoadingContainer />}>
-        <section className="pt-8 mt-0">
+        <section className="pt-8 mt-0" data-nav-theme="light">
           <SectionTitle text="Training & Recovery Equipments" />
 
           <div className="pt-12 grid grid-cols-1 lg:grid-cols-2 gap-10 auto-rows-fr">

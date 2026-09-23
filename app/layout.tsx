@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { Toaster } from "sonner";
 import AuthToast from "@/components/auth/AuthToast";
 import { Bebas_Neue } from "next/font/google";
+import { NavThemeProvider } from "@/components/navbar/Navthemecontext";
 
 const bebas = Bebas_Neue({
   subsets: ["latin"],
@@ -66,9 +67,11 @@ export default function RootLayout({
     <html lang="en" className={bebas.className} suppressHydrationWarning>
       <body className="antialiased">
         <ClientProviders>
-          <Navbar />
-          <AuthToast />
-          {children}
+          <NavThemeProvider>
+            <Navbar />
+            <AuthToast />
+            {children}
+          </NavThemeProvider>
           <Toaster richColors position="bottom-right" />
         </ClientProviders>
       </body>

@@ -21,12 +21,16 @@ export default async function FeaturedProducts() {
   );
 
   return (
-    <section className="pt-4 md:pt-2" aria-labelledby="featured-products-title">
+    <section
+      className="pt-4 md:pt-2"
+      aria-labelledby="featured-products-title"
+      data-nav-theme="light"
+    >
       <div id="featured-products-title">
         <SectionTitle text="Featured Equipment" />
       </div>
 
-      <ProductsGrid products={productsWithFavorite} userId={userId} />
+      <ProductsGrid products={productsWithFavorite} userId={userId} limit={4} />
     </section>
   );
 }
