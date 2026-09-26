@@ -6,6 +6,7 @@ import ProductsGrid from "@/components/products/ProductsGrid";
 import { fetchFeaturedPro } from "@/utils/action";
 import { getServerUserId } from "@/utils/server/auth";
 import { fetchFavoriteId } from "@/utils/server/favorite";
+import Footer from "@/components/footer/Footer";
 
 export default async function FeaturedProductsPage() {
   const userId = await getServerUserId();
@@ -26,7 +27,7 @@ export default async function FeaturedProductsPage() {
 
       <div className="pt-4">
         <SectionTitle text="Featured Products" />
-        <p className="mt-2 max-w-2xl text-neutral-600 dark:text-neutral-400">
+        <p className="mt-2 max-w-2xl text-neutral-600 dark:text-neutral-600">
           Simple gear and recovery tools built for busy people who train at
           home. Here&apos;s the full lineup of what we&apos;re featuring right
           now.
@@ -40,6 +41,7 @@ export default async function FeaturedProductsPage() {
           <EmptyList />
         )}
       </div>
+      <Footer />
     </Container>
   );
 }

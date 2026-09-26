@@ -13,20 +13,38 @@ export default function WorkOut({ video, quote, className }: Prop) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    if (!videoRef.current) return;
+    const el = videoRef.current;
+    if (!el) return;
 
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
 
-    videoRef.current.playbackRate = prefersReducedMotion ? 1 : 1.25;
+    el.playbackRate = prefersReducedMotion ? 1 : 1.25;
 
-    const playPromise = videoRef.current.play();
-    if (playPromise !== undefined) {
-      playPromise.catch(() => {
-        console.log("Autoplay blocked on mobile");
-      });
-    }
+    const tryPlay = () => {
+      const playPromise = el.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          console.log("Autoplay blocked on mobile");
+        });
+      }
+    };
+
+    tryPlay();
+
+    // Some mobile browsers (notably iOS Safari) pause background video
+    // when the app/tab loses visibility and don't resume it on their own.
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && el.paused) {
+        tryPlay();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   return (
@@ -44,7 +62,7 @@ export default function WorkOut({ video, quote, className }: Prop) {
           muted
           loop
           playsInline
-          preload="metadata"
+          preload="auto"
           poster="/homeworkout-poster.jpg"
           className="absolute left-1/2 top-1/2 h-full w-[140%] -translate-x-1/2 -translate-y-1/2 object-cover"
         >

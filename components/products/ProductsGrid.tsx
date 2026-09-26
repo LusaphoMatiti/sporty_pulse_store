@@ -50,7 +50,7 @@ const ProductsGrid = ({ products, userId, limit }: ProductsGridProps) => {
             return (
               <article key={id} className="group relative">
                 <Link href={`/equipments/${id}`}>
-                  <div className="relative w-full aspect-square lg:aspect-[4/3] overflow-hidden  bg-neutral-100 dark:bg-neutral-950">
+                  <div className="relative w-full aspect-square lg:aspect-[4/3] overflow-hidden  bg-neutral-200 dark:bg-neutral-900">
                     <Image
                       src={image}
                       alt={name}

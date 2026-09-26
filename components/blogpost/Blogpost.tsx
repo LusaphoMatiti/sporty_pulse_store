@@ -7,13 +7,13 @@ const Blogpost = () => {
         <h2 className="text-4xl font-bold mb-8">
           Fitness That Fits Into Your Day
         </h2>
-        <p className="mb-2 text-lg">
+        <p className="mb-2  font-light">
           You don&apos;t need a full gym to stay consistent. with 30 minutes
           before or after work, a few gym equipment are enough to keep you
           moving, right where you are. No commute, no crowded spaces, no
           complicated setup.
         </p>
-        <p className="text-lg">
+        <p className=" font-light">
           Recovery matters just as much as the workout. Stretching and using the
           right recovery tools helps you feel better, move better, and stay
           consistent on your own terms.
