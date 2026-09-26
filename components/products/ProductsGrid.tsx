@@ -30,7 +30,7 @@ const ProductsGrid = ({ products, userId, limit }: ProductsGridProps) => {
 
   return (
     <section data-nav-theme="light">
-      <div className="pt-4 pb-6">
+      <div className="pt-2 pb-6">
         {limit && products.length > limit && (
           <div className="w-full text-right mb-3">
             <Link
@@ -42,7 +42,7 @@ const ProductsGrid = ({ products, userId, limit }: ProductsGridProps) => {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-x-4 gap-y-4 sm:gap-x-6 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-x-2 gap-y-4 sm:gap-x-3 md:grid-cols-3 lg:grid-cols-4">
           {visibleProducts.map((product) => {
             const { id, name, price, image, favoriteId } = product;
             const formattedPrice = formatCurrency(price);
@@ -50,23 +50,23 @@ const ProductsGrid = ({ products, userId, limit }: ProductsGridProps) => {
             return (
               <article key={id} className="group relative">
                 <Link href={`/equipments/${id}`}>
-                  <div className="relative w-full aspect-square lg:aspect-[4/3] overflow-hidden  bg-neutral-200 dark:bg-neutral-900">
+                  <div className="relative w-full aspect-[4/5] lg:aspect-[4/5] overflow-hidden  bg-neutral-200 dark:bg-neutral-900">
                     <Image
                       src={image}
                       alt={name}
                       fill
                       sizes="(max-width: 767px) 50vw, (max-width: 1023px) 33vw, 25vw"
-                      className="object-contain p-2 transition-transform duration-500 ease-out group-hover:scale-[1.03] "
+                      className="object-contain transition-transform duration-500 ease-out group-hover:scale-[1.03] "
                     />
                   </div>
 
-                  <div className="pt-2 space-y-1 text-left">
-                    <h2 className="text-base font-medium leading-snug text-neutral-900 line-clamp-1 sm:text-lg lg:text-sm xl:text-sm dark:text-neutral-100">
+                  <div className="pt-2 ml-3 text-left">
+                    <h2 className="text-base font-medium leading-snug text-neutral-900 line-clamp-1 sm:text-lg lg:text-lg xl:text-md dark:text-neutral-100">
                       {name}
                     </h2>
 
                     <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm text-neutral-900 sm:text-base lg:text-xs xl:text-xs dark:text-neutral-100">
+                      <p className="text-sm text-neutral-900 sm:text-sm lg:text-md xl:text-sm dark:text-neutral-100">
                         {formattedPrice}
                       </p>
 

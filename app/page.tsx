@@ -16,9 +16,7 @@ export default async function HomePage() {
     <MarketingLayout>
       <Hero />
       <Suspense fallback={<LoadingContainer />}>
-        <Container className="py-10 px-10 sm:py-5">
-          <FeaturedProducts />
-        </Container>
+        <FeaturedProducts />
       </Suspense>
       <Container className="py-10 px-10 sm:py-5">
         <Blogpost />

@@ -22,7 +22,7 @@ export default async function FeaturedProducts() {
 
   return (
     <section
-      className="pt-4 md:pt-2"
+      className="py-5 md:py-5 px-3"
       aria-labelledby="featured-products-title"
       data-nav-theme="light"
     >
