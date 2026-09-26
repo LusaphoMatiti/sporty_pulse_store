@@ -20,7 +20,7 @@ export default async function FeaturedProductsPage() {
   );
 
   return (
-    <Container className="py-10 px-10 sm:py-5">
+    <Container className="py-10 sm:py-5">
       <Breadcrumbs
         items={[{ label: "Home", href: "/" }, { label: "Featured Products" }]}
       />

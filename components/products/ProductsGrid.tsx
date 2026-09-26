@@ -42,7 +42,7 @@ const ProductsGrid = ({ products, userId, limit }: ProductsGridProps) => {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-x-6 gap-y-4 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-4 sm:gap-x-6 md:grid-cols-3 lg:grid-cols-4">
           {visibleProducts.map((product) => {
             const { id, name, price, image, favoriteId } = product;
             const formattedPrice = formatCurrency(price);
@@ -55,7 +55,7 @@ const ProductsGrid = ({ products, userId, limit }: ProductsGridProps) => {
                       src={image}
                       alt={name}
                       fill
-                      sizes="(max-width:1023px) 50vw, 25vw"
+                      sizes="(max-width: 767px) 50vw, (max-width: 1023px) 33vw, 25vw"
                       className="object-contain p-2 transition-transform duration-500 ease-out group-hover:scale-[1.03] "
                     />
                   </div>
