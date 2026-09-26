@@ -18,7 +18,7 @@ export default async function HomePage() {
       <Suspense fallback={<LoadingContainer />}>
         <FeaturedProducts />
       </Suspense>
-      <Container className="py-10 px-10 sm:py-5">
+      <Container className="py-5 px-8 sm:py-5">
         <Blogpost />
       </Container>
 

@@ -2,7 +2,7 @@ import Image from "next/image";
 
 const Blogpost = () => {
   return (
-    <div className="flex flex-col md:flex-row md:justify-between mt-10">
+    <div className="flex flex-col md:flex-row md:justify-between mt-2">
       <div className="md:w-1/2 flex flex-col justify-center">
         <h2 className="text-4xl font-bold mb-8">
           Fitness That Fits Into Your Day

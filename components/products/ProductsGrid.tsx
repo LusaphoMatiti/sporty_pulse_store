@@ -30,7 +30,7 @@ const ProductsGrid = ({ products, userId, limit }: ProductsGridProps) => {
 
   return (
     <section data-nav-theme="light">
-      <div className="pt-2 pb-6">
+      <div className="pt-2 pb-6 sm:pb-3">
         {limit && products.length > limit && (
           <div className="w-full text-right mb-3">
             <Link
