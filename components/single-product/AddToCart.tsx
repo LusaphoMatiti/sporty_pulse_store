@@ -47,7 +47,7 @@ function AddToCart({ productId }: { productId: string }) {
           <input type="hidden" name="productId" value={productId} />
           <input type="hidden" name="amount" value={amount} />
 
-          <SubmitButton text="add to cart" className="mt-8" />
+          <SubmitButton text="add to cart" className="mt-8 bg-black" />
         </form>
       ) : (
         <ProductSignButton />

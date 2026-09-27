@@ -48,7 +48,10 @@ export default async function SingleProductsPage({ params }: PageProps) {
       <BreadCrumbs currentLabel={name} />
       <MarketingLayout>
         <TrackView productId={id} />
-        <div className="mt-6 grid gap-y-8 lg:grid-cols-2 lg:gap-x-16">
+        <div
+          className="mt-6 grid gap-y-8 lg:grid-cols-2 lg:gap-x-16 "
+          data-nav-theme="light"
+        >
           {/* IMAGE COLUMN */}
           <div className="relative w-full h-[260px] sm:h-[320px] md:h-[420px] lg:h-[500px]">
             <Image
@@ -86,15 +89,12 @@ export default async function SingleProductsPage({ params }: PageProps) {
           </div>
         </div>
 
-        <Trainer
-          equipmentName={name}
-          video="https://res.cloudinary.com/dsoxsrjn2/video/upload/v1769429711/lowerbody_video_m6vidn.mp4"
-          muscles={muscles}
-        />
-
         <ProductReviews productId={id} />
 
         {reviewDoesNotExist && <SubmitReview productId={id} />}
+
+        <Trainer />
+
         <div className="mt-20">
           <SimilarProducts
             muscle={product.muscle}
