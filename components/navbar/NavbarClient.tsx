@@ -18,7 +18,9 @@ export default function NavbarClient({ numItemsInCart, isDark }: Props) {
 
   return (
     <div className="flex gap-3 items-center">
-      <div className={`hidden lg:flex items-center gap-3 transition-colors duration-300 ${textColor}`}>
+      <div
+        className={`hidden lg:flex items-center gap-3 transition-colors duration-300 ${textColor}`}
+      >
         <Search onOpen={() => setSearchOpen(true)} isDark={isDark} />
         <CartButton numItemsInCart={numItemsInCart} isDark={isDark} />
         <ModeToggle isDark={isDark} />
@@ -27,7 +29,7 @@ export default function NavbarClient({ numItemsInCart, isDark }: Props) {
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
 
       <div className={`transition-colors duration-300 ${textColor}`}>
-        <LinksDropdown isDark={isDark} />
+        <LinksDropdown isDark={isDark} numItemsInCart={numItemsInCart} />
       </div>
     </div>
   );
