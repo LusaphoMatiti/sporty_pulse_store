@@ -37,9 +37,7 @@ model Products {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
-  // Optional for now -- existing rows have no owner yet. Gets backfilled
-  // and tightened to required once the new auth system is live and you've
-  // signed in once to create your own admin User row.
+
   userId         String?
   user           User?           @relation(fields: [userId], references: [id])
 
@@ -68,6 +66,7 @@ model ProductMuscle {
   muscle  Muscle   @relation(fields: [muscleId], references: [id], onDelete: Cascade)
 
   @@id([productId, muscleId])
+  @@index([muscleId])
 }
 
 model Category {
@@ -100,6 +99,8 @@ model Review {
   updatedAt      DateTime @updatedAt
   product        Products @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId      String
+
+  @@index([productId])
 }
 
 model Cart {
@@ -115,6 +116,8 @@ model Cart {
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   cartItems      CartItems[]
+
+  @@unique([userId])
 }
 
 model CartItems {
@@ -126,6 +129,8 @@ model CartItems {
   amount    Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([cartId])
 }
 
 model Order {
@@ -142,6 +147,8 @@ model Order {
   updatedAt  DateTime @updatedAt
 
   orderItems OrderItems[]
+
+  @@index([userId])
 }
 
 // ─────────────────────────────────────────────
