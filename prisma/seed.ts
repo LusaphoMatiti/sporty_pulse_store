@@ -344,6 +344,20 @@ const PRODUCTS: ProductSeed[] = [
 ];
 
 async function main() {
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (!adminEmail) {
+    throw new Error("ADMIN_EMAIL must be set so seeded products have an owner");
+  }
+
+  // Same email the Google sign-in upserts on, so the admin's first sign-in
+  // reuses this row instead of creating a second one.
+  const admin = await prisma.user.upsert({
+    where: { email: adminEmail },
+    update: {},
+    create: { email: adminEmail },
+    select: { id: true },
+  });
+
   console.log("Seeding muscles...");
   await prisma.muscle.createMany({ data: [...MUSCLES], skipDuplicates: true });
 
@@ -413,8 +427,7 @@ async function main() {
               muscle: { connect: { id: muscleId } },
             })),
           },
-          // userId intentionally left unset -- still optional until the
-          // auth migration's backfill step runs.
+          userId: admin.id,
         },
       });
       console.log(`  Created: ${p.name}  (id: ${created.id})`);

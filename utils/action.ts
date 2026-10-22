@@ -34,7 +34,10 @@ const getAdminUser = async () => {
   const user = await getAuthUser();
   // Now compares email rather than a hardcoded ID -- matches the same
   // change made in middleware.ts, and survives database reseeds.
-  if (user.email !== process.env.ADMIN_EMAIL) redirect("/");
+  const adminEmail = process.env.ADMIN_EMAIL;
+  // Fail closed: if ADMIN_EMAIL is not set, nobody is an admin. The comparison
+  // is deliberately exact (case-sensitive).
+  if (!adminEmail || user.email !== adminEmail) redirect("/");
   return user;
 };
 
@@ -833,22 +836,4 @@ export const getProductById = async (id: string) => {
   });
 
   return product;
-};
-
-export const attachMusclesToProduct = async (
-  productId: string,
-  muscleIds: string[],
-) => {
-  await db.products.update({
-    where: { id: productId },
-    data: {
-      productMuscles: {
-        create: muscleIds.map((id) => ({
-          muscle: {
-            connect: { id },
-          },
-        })),
-      },
-    },
-  });
 };

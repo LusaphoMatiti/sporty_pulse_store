@@ -61,8 +61,16 @@ export const authOptions: NextAuthOptions = {
     // Only the Google branch needs to upsert -- Credentials users already
     // exist by the time authorize() succeeds (accounts are created via a
     // separate sign-up action, not here).
-    async signIn({ user, account }) {
+    async signIn({ user, account, profile }) {
       if (account?.provider === "google") {
+        // Only trust an email address that Google itself has verified.
+        const googleProfile = profile as
+          | { email_verified?: boolean }
+          | undefined;
+        if (!googleProfile?.email_verified) {
+          return false;
+        }
+
         const dbUser = await db.user.upsert({
           where: { email: user.email! },
           update: { name: user.name },
