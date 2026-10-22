@@ -29,6 +29,32 @@ const payfastEncode = (value: string) =>
     .replace(/~/g, "%7E");
 
 /**
+ * Structured, PII-free logging for the ITN handler. Only a safe identifier
+ * (the order id) and a failure category are logged -- never the request body,
+ * signatures, merchant details or customer fields. String values are capped
+ * because some events fire before the request has been authenticated, so the
+ * order id may be attacker-supplied.
+ */
+const logItn = (
+  level: "info" | "warn" | "error",
+  event: string,
+  details: Record<string, string | number | boolean | undefined> = {},
+) => {
+  const safe: Record<string, string | number | boolean | undefined> = {};
+  for (const [key, value] of Object.entries(details)) {
+    safe[key] = typeof value === "string" ? value.slice(0, 100) : value;
+  }
+  console[level](JSON.stringify({ scope: "payfast_itn", event, ...safe }));
+};
+
+// Error name and code only. Messages and stacks can embed query parameters
+// or customer data, so they are deliberately left out.
+const errorInfo = (error: unknown) => ({
+  errorName: error instanceof Error ? error.name : "UnknownError",
+  errorCode: (error as { code?: string } | null)?.code,
+});
+
+/**
  * Rebuilds the signature from the ITN payload using the ORDER THE FIELDS
  * ARRIVED IN (not the fixed checkout field order -- that's only for the
  * outgoing checkout request). PayFast decides the order it sends fields
@@ -69,7 +95,7 @@ const verifyWithPayFast = async (rawBody: string) => {
     const text = await response.text();
     return text.trim() === "VALID";
   } catch (error) {
-    console.error("PayFast validate-endpoint check failed:", error);
+    logItn("error", "validate_request_failed", errorInfo(error));
     return false;
   }
 };
@@ -88,28 +114,20 @@ export const POST = async (req: NextRequest) => {
 
   // ── 1. Signature check ─────────────────────────────────────────
   if (expectedSignature !== receivedSignature) {
-    console.error("PayFast ITN: signature mismatch", {
-      orderId,
-      expectedSignature,
-      receivedSignature,
-    });
+    logItn("error", "signature_mismatch", { orderId });
     return new Response(null, { status: 400 });
   }
 
   // ── 2. Merchant ID check ───────────────────────────────────────
   if (merchantId !== PAYFAST_MERCHANT_ID) {
-    console.error("PayFast ITN: merchant ID mismatch", {
-      orderId,
-      merchantIdReceived: merchantId,
-      merchantIdExpected: PAYFAST_MERCHANT_ID,
-    });
+    logItn("error", "merchant_mismatch", { orderId });
     return new Response(null, { status: 400 });
   }
 
   // ── 3. Source check -- confirm this really came from PayFast ──
   const isFromPayFast = await verifyWithPayFast(rawBody);
   if (!isFromPayFast) {
-    console.error("PayFast ITN: failed source validation", { orderId });
+    logItn("error", "source_validation_failed", { orderId });
     return new Response(null, { status: 400 });
   }
 
@@ -126,7 +144,7 @@ export const POST = async (req: NextRequest) => {
     });
 
     if (!order) {
-      console.error("PayFast ITN: no matching order", { orderId });
+      logItn("error", "order_not_found", { orderId });
       return new Response(null, { status: 404 });
     }
 
@@ -138,7 +156,7 @@ export const POST = async (req: NextRequest) => {
     // ── 5. Amount check -- protects against a tampered amount ────
     const expectedAmount = order.orderTotal.toFixed(2);
     if (amountGross !== expectedAmount) {
-      console.error("PayFast ITN: amount mismatch", {
+      logItn("error", "amount_mismatch", {
         orderId,
         expected: expectedAmount,
         received: amountGross,
@@ -186,22 +204,24 @@ export const POST = async (req: NextRequest) => {
         if (!bridgeResponse.ok) {
           // fetch() does NOT throw on 4xx/5xx -- this is the only way
           // to actually catch a failed bridge call.
-          const bodyText = await bridgeResponse.text().catch(() => "");
-          console.error("Pro's entitlement bridge rejected the call:", {
+          logItn("error", "bridge_rejected", {
+            orderId,
             status: bridgeResponse.status,
-            body: bodyText,
           });
         }
       } catch (bridgeError) {
         // Order is still marked paid -- don't fail the whole ITN over
         // this. Log it for now; a retry queue is a post-showcase item.
-        console.error("Failed to call Pro's entitlement bridge:", bridgeError);
+        logItn("error", "bridge_call_failed", {
+          orderId,
+          ...errorInfo(bridgeError),
+        });
       }
     }
 
     return new Response(null, { status: 200 });
   } catch (error) {
-    console.error("PayFast ITN processing error:", error);
+    logItn("error", "processing_error", { orderId, ...errorInfo(error) });
     return new Response(null, { status: 500 });
   }
 };
