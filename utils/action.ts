@@ -88,7 +88,7 @@ export const fetchSingleProductWithMuscles = async (id: string) => {
 };
 
 export const createProduction = async (prevState: any, formData: FormData) => {
-  const user = await getAuthUser();
+  const user = await getAdminUser();
 
   try {
     const rawData = Object.fromEntries(formData.entries());
@@ -211,6 +211,7 @@ export const updateProductAction = async (
   prevState: any,
   formData: FormData,
 ) => {
+  await getAdminUser();
   try {
     const id = formData.get("id") as string;
     const name = formData.get("name") as string;
@@ -218,6 +219,13 @@ export const updateProductAction = async (
     const description = formData.get("description") as string;
     const price = Number(formData.get("price"));
     const featured = formData.has("featured");
+
+    if (!Number.isInteger(price) || price < 1) {
+      return {
+        success: false,
+        message: "Price must be a whole number of at least 1",
+      };
+    }
 
     await db.products.update({
       where: { id },
@@ -238,7 +246,7 @@ export const updateProductImageAction = async (
   prevState: any,
   formData: FormData,
 ) => {
-  await getAuthUser();
+  await getAdminUser();
   try {
     const image = formData.get("image") as File;
     const productId = formData.get("id") as string;
@@ -410,6 +418,11 @@ export const findExistingReview = async (userId: string, productId: string) =>
 
 /** CART **/
 
+const MAX_ITEM_QUANTITY = 99;
+
+const isValidQuantity = (quantity: number) =>
+  Number.isInteger(quantity) && quantity >= 1 && quantity <= MAX_ITEM_QUANTITY;
+
 export const fetchOrCreateCart = async () => {
   const user = await getAuthUser();
   let cart = await db.cart.findFirst({ where: { userId: user.id } });
@@ -441,10 +454,16 @@ export const addToCartAction = async (
 ): Promise<CartActionState> => {
   try {
     const productId = formData.get("productId") as string;
-    const amount = Number(formData.get("amount")) || 1;
+    const rawAmount = formData.get("amount");
+    const amount =
+      rawAmount === null || rawAmount === "" ? 1 : Number(rawAmount);
 
     if (!productId) {
       return { success: false, message: "Product ID missing" };
+    }
+
+    if (!isValidQuantity(amount)) {
+      return { success: false, message: "Invalid quantity" };
     }
 
     const cart = await fetchOrCreateCart();
@@ -454,6 +473,9 @@ export const addToCartAction = async (
     });
 
     if (existingItem) {
+      if (!isValidQuantity(existingItem.amount + amount)) {
+        return { success: false, message: "Invalid quantity" };
+      }
       await db.cartItems.update({
         where: { id: existingItem.id },
         data: { amount: existingItem.amount + amount },
@@ -502,13 +524,30 @@ export const updateCartOrCreateItemAction = async ({
   amount: number;
   productId: string;
 }) => {
+  const user = await getAuthUser();
+
+  if (!isValidQuantity(amount)) {
+    throw new Error("Invalid quantity");
+  }
+
+  // The cart must belong to the logged-in user.
+  const cart = await db.cart.findFirst({
+    where: { id: cartId, userId: user.id },
+  });
+  if (!cart) {
+    throw new Error("Cart not found");
+  }
+
   let cartItem = await db.cartItems.findFirst({
     where: {
       productId,
-      cartId,
+      cartId: cart.id,
     },
   });
   if (cartItem) {
+    if (!isValidQuantity(cartItem.amount + amount)) {
+      throw new Error("Invalid quantity");
+    }
     cartItem = await db.cartItems.update({
       where: {
         id: cartItem.id,
@@ -519,17 +558,28 @@ export const updateCartOrCreateItemAction = async ({
     });
   } else {
     cartItem = await db.cartItems.create({
-      data: { amount, productId, cartId },
+      data: { amount, productId, cartId: cart.id },
     });
   }
 
   revalidatePath("/cart");
 };
 
-export const updateCart = async (cart: Cart) => {
+export const updateCart = async (cart: Pick<Cart, "id">) => {
+  const user = await getAuthUser();
+
+  // Only the cart id is taken from the caller. Tax rate and shipping are read
+  // from the database, and the cart must belong to the logged-in user.
+  const trustedCart = await db.cart.findFirst({
+    where: { id: cart.id, userId: user.id },
+  });
+  if (!trustedCart) {
+    throw new Error("Cart not found");
+  }
+
   const cartItems = await db.cartItems.findMany({
     where: {
-      cartId: cart.id,
+      cartId: trustedCart.id,
     },
     include: {
       product: true,
@@ -543,13 +593,13 @@ export const updateCart = async (cart: Cart) => {
     numItemsInCart += item.amount;
     cartTotal += item.amount * item.product.price;
   }
-  const tax = cart.taxRate * cartTotal;
-  const shipping = cartTotal ? cart.shipping : 0;
+  const tax = Math.round(trustedCart.taxRate * cartTotal);
+  const shipping = cartTotal ? trustedCart.shipping : 0;
   const orderTotal = cartTotal + tax + shipping;
 
   const updateCart = await db.cart.update({
     where: {
-      id: cart.id,
+      id: trustedCart.id,
     },
     data: {
       numItemsInCart,
@@ -569,26 +619,25 @@ export const createOrderAction = async (formData: FormData) => {
   const user = await getAuthUser();
   const cart = await fetchOrCreateCart();
 
-  await db.order.deleteMany({
-    where: { userId: user.id, isPaid: false },
-  });
+  // Recalculate from current database prices instead of trusting the totals
+  // stored on the Cart row. updateCart() returns the fresh totals together
+  // with the items they were calculated from.
+  const freshCart = await updateCart(cart);
 
-  // Fetch cart items directly here, rather than relying on whatever
-  // fetchOrCreateCart() happens to return -- keeps this self-contained.
-  const cartItems = await db.cartItems.findMany({
-    where: { cartId: cart.id },
-  });
+  if (freshCart.cartItems.length === 0 || freshCart.numItemsInCart < 1) {
+    redirect("/cart");
+  }
 
   const order = await db.order.create({
     data: {
       userId: user.id,
-      products: cart.numItemsInCart,
-      orderTotal: cart.orderTotal,
-      tax: cart.tax,
-      shipping: cart.shipping,
+      products: freshCart.numItemsInCart,
+      orderTotal: freshCart.orderTotal,
+      tax: freshCart.tax,
+      shipping: freshCart.shipping,
       email: user.email || "no-email@example.com",
       orderItems: {
-        create: cartItems.map((item) => ({
+        create: freshCart.cartItems.map((item) => ({
           productId: item.productId,
           quantity: item.amount,
         })),
@@ -628,6 +677,8 @@ export const fetchAdminOrders = async () => {
 };
 
 export const removeCartItemAction = async (formData: FormData) => {
+  const user = await getAuthUser();
+
   const cartItemId = formData.get("id") as string;
 
   if (!cartItemId) {
@@ -640,6 +691,8 @@ export const removeCartItemAction = async (formData: FormData) => {
   });
 
   if (!cartItem) return;
+
+  if (cartItem.cart.userId !== user.id) return;
 
   await db.cartItems.delete({
     where: { id: cartItemId },
@@ -656,7 +709,7 @@ export const updateCartItemAction = async (formData: FormData) => {
   const cartItemId = formData.get("id") as string;
   const amount = Number(formData.get("amount"));
 
-  if (!cartItemId || !amount || amount < 1) return;
+  if (!cartItemId || !isValidQuantity(amount)) return;
 
   const cartItem = await db.cartItems.findUnique({
     where: { id: cartItemId },

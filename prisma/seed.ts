@@ -237,7 +237,7 @@ const PRODUCTS: ProductSeed[] = [
     name: "Foam Roller",
     company: "Sporty Pulse",
     description:
-      "A firm foam roller for self-myofascial release and post-workout recovery. Rolling out tight muscles after training helps ease soreness, restore range of motion, and speed up recovery between sessions -- an essential companion to any serious full-body training routine.",
+      "A firm foam roller for self-myofascial release and post-workout recovery. Rolling out tight muscles after training helps ease soreness, restore range of motion, and speed up recovery between sessions, an essential companion to any serious full-body training routine.",
     price: 350,
     image: imageUrl("1783518566070-soft-massaging-foam-roller-blue.png"),
     featured: false,
@@ -261,7 +261,7 @@ const PRODUCTS: ProductSeed[] = [
     name: "Massage Ball",
     company: "Sporty Pulse",
     description:
-      "A small, firm ball designed for targeted trigger-point release. Its size lets you reach tight, specific spots that larger recovery tools can't -- shoulders, feet, glutes -- delivering precise pressure exactly where you need it after a demanding session.",
+      "A small, firm ball designed for targeted trigger-point release. Its size lets you reach tight, specific spots that larger recovery tools can't, shoulders, feet, glutes, delivering precise pressure exactly where you need it after a demanding session.",
     price: 120,
     image: imageUrl("1767539124681-small-massage-ball-black.png"),
     featured: false,

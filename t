@@ -1,0 +1,6 @@
+[35mapp/(protected)/cart/page.tsx[m
+[35mcomponents/cart/CartTotals.tsx[m
+[35mprisma/migrations/0_init/migration.sql[m
+[35mprisma/migrations/20251217143230_init/migration.sql[m
+[35mprisma/schema.prisma[m
+[35mutils/action.ts[m

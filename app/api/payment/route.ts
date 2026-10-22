@@ -1,11 +1,16 @@
 import { type NextRequest } from "next/server";
 import crypto from "crypto";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import db from "@/utils/db";
 
 const PAYFAST_MERCHANT_ID = process.env.PAYFAST_MERCHANT_ID as string;
 const PAYFAST_MERCHANT_KEY = process.env.PAYFAST_MERCHANT_KEY as string;
 const PAYFAST_PASSPHRASE = process.env.PAYFAST_PASSPHRASE as string;
 const PAYFAST_MODE = process.env.PAYFAST_MODE ?? "sandbox"; // "sandbox" | "live"
+// Fixed public base URL for PayFast's return / cancel / notify URLs. Never
+// derived from request headers, which the caller controls.
+const APP_BASE_URL = (process.env.NEXTAUTH_URL ?? "").replace(/\/+$/, "");
 
 const PAYFAST_PROCESS_URL =
   PAYFAST_MODE === "live"
@@ -78,19 +83,45 @@ export const POST = async (req: NextRequest) => {
     });
   }
 
-  const requestHeaders = new Headers(req.headers);
-  const origin = requestHeaders.get("origin");
+  if (!APP_BASE_URL) {
+    console.error("NEXTAUTH_URL is not set -- cannot build PayFast URLs");
+    return Response.json(null, {
+      status: 500,
+      statusText: "Internal Server Error",
+    });
+  }
 
-  const { orderId, cartId } = await req.json();
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return Response.json(null, { status: 401, statusText: "Unauthorized" });
+  }
+
+  // Only the order id is taken from the request body.
+  const { orderId } = await req.json();
 
   try {
     const order = await db.order.findUnique({ where: { id: orderId } });
-    const cart = await db.cart.findUnique({
-      where: { id: cartId },
+
+    // Someone else's order gets the same 404 as one that doesn't exist.
+    if (!order || order.userId !== session.user.id) {
+      return Response.json(null, { status: 404, statusText: "Not Found" });
+    }
+
+    // Never start a second payment for an order that is already paid.
+    if (order.isPaid) {
+      return Response.json(null, {
+        status: 409,
+        statusText: "Order already paid",
+      });
+    }
+
+    // The cart comes from the order's owner, never from the request body.
+    const cart = await db.cart.findFirst({
+      where: { userId: order.userId },
       include: { cartItems: { include: { product: true } } },
     });
 
-    if (!order || !cart) {
+    if (!cart) {
       return Response.json(null, { status: 404, statusText: "Not Found" });
     }
 
@@ -108,16 +139,16 @@ export const POST = async (req: NextRequest) => {
       merchant_id: PAYFAST_MERCHANT_ID,
       merchant_key: PAYFAST_MERCHANT_KEY,
       // return_url is browser-only -- no order mutation happens here.
-      return_url: `${origin}/orders`,
-      cancel_url: `${origin}/cart`,
+      return_url: `${APP_BASE_URL}/orders`,
+      cancel_url: `${APP_BASE_URL}/cart`,
       // notify_url is the only thing allowed to mark this order as paid.
-      notify_url: `${origin}/api/payfast/notify`,
+      notify_url: `${APP_BASE_URL}/api/payfast/notify`,
       email_address: order.email,
       m_payment_id: orderId,
       amount: order.orderTotal.toFixed(2),
       item_name: itemName,
       // Carried through so the ITN handler knows which cart to clean up.
-      custom_str1: cartId,
+      custom_str1: cart.id,
     };
 
     const signature = buildSignature(fields);

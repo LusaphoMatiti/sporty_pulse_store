@@ -83,20 +83,8 @@ export const POST = async (req: NextRequest) => {
   const paymentStatus = params.get("payment_status") ?? "";
   const orderId = params.get("m_payment_id") ?? "";
   const amountGross = params.get("amount_gross") ?? "";
-  const cartId = params.get("custom_str1") ?? "";
 
   const expectedSignature = computeExpectedSignature(params);
-
-  // TEMPORARY -- remove once signature issues are confirmed resolved.
-  // Safe to log: PayFast's ITN payload never includes merchant_key.
-  console.log("PayFast ITN debug:", {
-    rawBody,
-    receivedSignature,
-    expectedSignature,
-    merchantIdReceived: merchantId,
-    merchantIdExpected: PAYFAST_MERCHANT_ID,
-    hasPassphraseSet: Boolean(PAYFAST_PASSPHRASE),
-  });
 
   // ── 1. Signature check ─────────────────────────────────────────
   if (expectedSignature !== receivedSignature) {
@@ -159,14 +147,22 @@ export const POST = async (req: NextRequest) => {
     }
 
     // ── 6. Mark the order paid ────────────────────────────────────
-    await db.order.update({
-      where: { id: orderId },
+    // Atomic: only one of several simultaneous ITNs can flip isPaid from
+    // false to true, so the steps below run exactly once per order.
+    const paidUpdate = await db.order.updateMany({
+      where: { id: orderId, isPaid: false },
       data: { isPaid: true },
     });
+    if (paidUpdate.count === 0) {
+      return new Response(null, { status: 200 });
+    }
 
-    if (cartId) {
+    if (order.userId) {
       // Best-effort -- don't fail the ITN if the cart is already gone.
-      await db.cart.delete({ where: { id: cartId } }).catch(() => null);
+      // Looked up from the order's owner, never from the ITN payload.
+      await db.cart
+        .deleteMany({ where: { userId: order.userId } })
+        .catch(() => null);
     }
 
     // ── 7. Call Pro's bridge so it can unlock the matching equipment ─
