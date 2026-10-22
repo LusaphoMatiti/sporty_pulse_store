@@ -100,7 +100,10 @@ export const POST = async (req: NextRequest) => {
   const { orderId } = await req.json();
 
   try {
-    const order = await db.order.findUnique({ where: { id: orderId } });
+    const order = await db.order.findUnique({
+      where: { id: orderId },
+      include: { orderItems: { include: { product: true } } },
+    });
 
     // Someone else's order gets the same 404 as one that doesn't exist.
     if (!order || order.userId !== session.user.id) {
@@ -116,21 +119,50 @@ export const POST = async (req: NextRequest) => {
     }
 
     // The cart comes from the order's owner, never from the request body.
-    const cart = await db.cart.findFirst({
-      where: { userId: order.userId },
-      include: { cartItems: { include: { product: true } } },
-    });
+    const cart = await db.cart.findFirst({ where: { userId: order.userId } });
 
     if (!cart) {
       return Response.json(null, { status: 404, statusText: "Not Found" });
     }
 
+    // Recalculate the checkout amount from the order's own items at current
+    // database prices, using the same rules as updateCart() in
+    // utils/action.ts (keep the two in sync). Anything that does not match
+    // exactly is refused, so a stale or wrongly stored total is never charged.
+    const hasInvalidQuantity = order.orderItems.some(
+      (item) => !Number.isInteger(item.quantity) || item.quantity < 1,
+    );
+    const subtotal = order.orderItems.reduce(
+      (sum, item) => sum + item.quantity * item.product.price,
+      0,
+    );
+    const expectedTotal =
+      subtotal +
+      Math.round(cart.taxRate * subtotal) +
+      (subtotal ? cart.shipping : 0);
+
+    if (
+      hasInvalidQuantity ||
+      subtotal < 1 ||
+      order.orderTotal !== expectedTotal
+    ) {
+      console.error("PayFast checkout: order total mismatch", {
+        orderId,
+        storedTotal: order.orderTotal,
+        expectedTotal,
+      });
+      return Response.json(null, {
+        status: 409,
+        statusText: "Order total is out of date",
+      });
+    }
+
     // PayFast charges per-transaction, not per line item -- one combined
-    // description covering the whole order.
+    // description covering the whole order, taken from the order's own items.
     const itemName =
-      cart.cartItems.length === 1
-        ? cart.cartItems[0].product.name
-        : `Sporty Pulse Store order (${cart.cartItems.length} items)`;
+      order.orderItems.length === 1
+        ? order.orderItems[0].product.name
+        : `Sporty Pulse Store order (${order.orderItems.length} items)`;
 
     // NOTE: order.orderTotal is stored in whole Rand (see updateCart()),
     // not cents -- unlike the old Stripe route, which multiplied by 100
