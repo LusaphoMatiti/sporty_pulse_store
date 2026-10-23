@@ -8,9 +8,25 @@ const PAYFAST_MERCHANT_ID = process.env.PAYFAST_MERCHANT_ID as string;
 const PAYFAST_MERCHANT_KEY = process.env.PAYFAST_MERCHANT_KEY as string;
 const PAYFAST_PASSPHRASE = process.env.PAYFAST_PASSPHRASE as string;
 const PAYFAST_MODE = process.env.PAYFAST_MODE ?? "sandbox"; // "sandbox" | "live"
-// Fixed public base URL for PayFast's return / cancel / notify URLs. Never
-// derived from request headers, which the caller controls.
-const APP_BASE_URL = (process.env.NEXTAUTH_URL ?? "").replace(/\/+$/, "");
+
+// Canonical public URL of the store, used for PayFast's return / cancel /
+// notify URLs. Server-configured only, never derived from request headers,
+// which the caller controls. Validated here: it must parse as a URL, and live
+// payments require https. Only the origin is kept, so a trailing slash or a
+// path on NEXTAUTH_URL cannot leak into the payment URLs.
+const getAppBaseUrl = () => {
+  const raw = process.env.NEXTAUTH_URL;
+  if (!raw) return null;
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+    if (PAYFAST_MODE === "live" && url.protocol !== "https:") return null;
+    return url.origin;
+  } catch {
+    return null;
+  }
+};
+const APP_BASE_URL = getAppBaseUrl();
 
 const PAYFAST_PROCESS_URL =
   PAYFAST_MODE === "live"
@@ -84,7 +100,9 @@ export const POST = async (req: NextRequest) => {
   }
 
   if (!APP_BASE_URL) {
-    console.error("NEXTAUTH_URL is not set -- cannot build PayFast URLs");
+    console.error(
+      "NEXTAUTH_URL is missing or invalid (live mode requires https) -- cannot build PayFast URLs",
+    );
     return Response.json(null, {
       status: 500,
       statusText: "Internal Server Error",
