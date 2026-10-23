@@ -145,6 +145,7 @@ model Order {
   isPaid     Boolean  @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  entitlementsGrantedAt DateTime?
 
   orderItems OrderItems[]
 

@@ -148,8 +148,10 @@ export const POST = async (req: NextRequest) => {
       return new Response(null, { status: 404 });
     }
 
-    // Already processed -- PayFast can resend the same ITN.
-    if (order.isPaid) {
+    // Fully processed (paid and entitlements delivered) -- PayFast can resend
+    // the same ITN. A paid order whose entitlements are still undelivered
+    // carries on below, so the delivery is retried.
+    if (order.isPaid && order.entitlementsGrantedAt) {
       return new Response(null, { status: 200 });
     }
 
@@ -164,60 +166,80 @@ export const POST = async (req: NextRequest) => {
       return new Response(null, { status: 400 });
     }
 
-    // ── 6. Mark the order paid ────────────────────────────────────
-    // Atomic: only one of several simultaneous ITNs can flip isPaid from
-    // false to true, so the steps below run exactly once per order.
-    const paidUpdate = await db.order.updateMany({
-      where: { id: orderId, isPaid: false },
-      data: { isPaid: true },
-    });
-    if (paidUpdate.count === 0) {
+    // ── 6. Mark the order paid (first notification only) ──────────
+    if (!order.isPaid) {
+      // Atomic: only one of several simultaneous ITNs can flip isPaid from
+      // false to true.
+      const paidUpdate = await db.order.updateMany({
+        where: { id: orderId, isPaid: false },
+        data: { isPaid: true },
+      });
+      if (paidUpdate.count === 0) {
+        // Another notification for this order is already handling it.
+        return new Response(null, { status: 200 });
+      }
+
+      if (order.userId) {
+        // Best-effort -- don't fail the ITN if the cart is already gone.
+        // Looked up from the order's owner, never from the ITN payload.
+        // First notification only, so a retry never wipes a newer cart.
+        await db.cart
+          .deleteMany({ where: { userId: order.userId } })
+          .catch(() => null);
+      }
+    }
+
+    // ── 7. Deliver the entitlements via Pro's bridge ──────────────
+    // Retryable: entitlementsGrantedAt is only set after Pro confirms. A
+    // failure answers 500 so PayFast sends the notification again, and a
+    // repeat notification skips step 6 and lands back here until delivery
+    // succeeds.
+    if (!PRO_API_BASE_URL || !order.email || order.orderItems.length === 0) {
+      logItn("warn", "bridge_skipped", { orderId });
       return new Response(null, { status: 200 });
     }
 
-    if (order.userId) {
-      // Best-effort -- don't fail the ITN if the cart is already gone.
-      // Looked up from the order's owner, never from the ITN payload.
-      await db.cart
-        .deleteMany({ where: { userId: order.userId } })
-        .catch(() => null);
-    }
-
-    // ── 7. Call Pro's bridge so it can unlock the matching equipment ─
-    if (order.email && order.orderItems.length > 0 && PRO_API_BASE_URL) {
-      try {
-        const bridgeResponse = await fetch(
-          `${PRO_API_BASE_URL}/api/internal/entitlements/grant`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${STORE_BRIDGE_SECRET}`,
-            },
-            body: JSON.stringify({
-              email: order.email,
-              storeProductIds: order.orderItems.map((item) => item.productId),
-            }),
+    try {
+      const bridgeResponse = await fetch(
+        `${PRO_API_BASE_URL}/api/internal/entitlements/grant`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${STORE_BRIDGE_SECRET}`,
+            // Lets Pro recognise a repeat delivery of the same order.
+            "Idempotency-Key": order.id,
           },
-        );
+          body: JSON.stringify({
+            email: order.email,
+            storeProductIds: order.orderItems.map((item) => item.productId),
+          }),
+          signal: AbortSignal.timeout(10000),
+        },
+      );
 
-        if (!bridgeResponse.ok) {
-          // fetch() does NOT throw on 4xx/5xx -- this is the only way
-          // to actually catch a failed bridge call.
-          logItn("error", "bridge_rejected", {
-            orderId,
-            status: bridgeResponse.status,
-          });
-        }
-      } catch (bridgeError) {
-        // Order is still marked paid -- don't fail the whole ITN over
-        // this. Log it for now; a retry queue is a post-showcase item.
-        logItn("error", "bridge_call_failed", {
+      if (!bridgeResponse.ok) {
+        // fetch() does NOT throw on 4xx/5xx -- this is the only way
+        // to actually catch a failed bridge call.
+        logItn("error", "bridge_rejected", {
           orderId,
-          ...errorInfo(bridgeError),
+          status: bridgeResponse.status,
         });
+        return new Response(null, { status: 500 });
       }
+    } catch (bridgeError) {
+      logItn("error", "bridge_call_failed", {
+        orderId,
+        ...errorInfo(bridgeError),
+      });
+      return new Response(null, { status: 500 });
     }
+
+    // Record the delivery. Atomic, so concurrent notifications record it once.
+    await db.order.updateMany({
+      where: { id: orderId, entitlementsGrantedAt: null },
+      data: { entitlementsGrantedAt: new Date() },
+    });
 
     return new Response(null, { status: 200 });
   } catch (error) {
