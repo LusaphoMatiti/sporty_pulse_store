@@ -43,7 +43,7 @@ const CheckoutPage = () => {
 
   // Step 2: once we have the signed fields, auto-submit a hidden form
   // to redirect the customer to PayFast's hosted payment page.
-  // (PayFast is a redirect flow, not an embeddable widget like Stripe was.)
+  // (PayFast is a redirect flow.)
   useEffect(() => {
     if (actionUrl && fields && formRef.current) {
       formRef.current.submit();

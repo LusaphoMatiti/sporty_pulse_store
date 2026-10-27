@@ -519,26 +519,26 @@ const fetchProduct = async (productId: string) => {
 };
 
 export const updateCartOrCreateItemAction = async ({
-  cartId,
   amount,
   productId,
 }: {
-  cartId: string;
   amount: number;
   productId: string;
 }) => {
-  const user = await getAuthUser();
+  // The cart is derived from the logged-in user (this also requires a login),
+  // never taken from the caller.
+  const cart = await fetchOrCreateCart();
 
   if (!isValidQuantity(amount)) {
     throw new Error("Invalid quantity");
   }
 
-  // The cart must belong to the logged-in user.
-  const cart = await db.cart.findFirst({
-    where: { id: cartId, userId: user.id },
+  const product = await db.products.findUnique({
+    where: { id: productId },
+    select: { id: true },
   });
-  if (!cart) {
-    throw new Error("Cart not found");
+  if (!product) {
+    throw new Error("Product not found");
   }
 
   let cartItem = await db.cartItems.findFirst({

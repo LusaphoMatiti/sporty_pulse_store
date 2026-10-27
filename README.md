@@ -42,7 +42,7 @@ Most small‑to‑medium e‑commerce platforms struggle with three core issues:
 - **Server Actions**
 - **Tailwind CSS**
 - **Cloudinary** (media delivery)
-- **Stripe** (payments)
+- **PayFast** (payments)
 
 ---
 
@@ -80,7 +80,7 @@ Most small‑to‑medium e‑commerce platforms struggle with three core issues:
 - Reduces load times across devices and network conditions
 - Offloads media processing from the application server
 
-### Why Stripe
+### Why Payfast
 
 - Secure, production‑grade payment handling
 - Webhook‑based flow for reliable order processing
