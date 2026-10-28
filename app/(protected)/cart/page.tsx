@@ -3,16 +3,15 @@ import CartTotals from "@/components/cart/CartTotals";
 import EmptyState from "@/components/global/EmptyState";
 import SectionTitle from "@/components/global/SectionTitle";
 import MarketingLayout from "@/components/layouts/MarketingLayout";
-import { fetchOrCreateCart, updateCart } from "@/utils/action";
+import { fetchCartForDisplay } from "@/utils/action";
 import getAuthUser from "@/utils/action";
 import { redirect } from "next/navigation";
 
 async function CartPage() {
   const user = await getAuthUser();
   if (!user.id) redirect("/");
-  const previousCart = await fetchOrCreateCart();
-  const cart = await updateCart(previousCart);
-  if (cart.numItemsInCart === 0) {
+  const cart = await fetchCartForDisplay();
+  if (!cart || cart.numItemsInCart === 0) {
     return (
       <EmptyState
         title="Empty Cart"

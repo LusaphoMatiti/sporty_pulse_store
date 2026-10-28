@@ -17,6 +17,7 @@ import { ActionResult, AppError } from "./app-error";
 import { FavoriteState } from "./app-error";
 import { Products, Muscle } from "@prisma/client";
 import prisma from "@/utils/db";
+import { calculateCartTotals } from "./pricing";
 
 const getAuthUser = async () => {
   const session = await getServerSession(authOptions);
@@ -568,6 +569,26 @@ export const updateCartOrCreateItemAction = async ({
   revalidatePath("/cart");
 };
 
+// Read-only cart for rendering: never creates or updates anything. Totals are
+// calculated in memory from current database prices, so a page always shows
+// up-to-date amounts without writing to the database. Persisted totals are
+// refreshed by the cart mutations and at checkout.
+export const fetchCartForDisplay = async () => {
+  const user = await getAuthUser();
+  const cart = await db.cart.findFirst({
+    where: { userId: user.id },
+    include: { cartItems: { include: { product: true } } },
+  });
+  if (!cart) return null;
+
+  const totals = calculateCartTotals(
+    cart.cartItems,
+    cart.taxRate,
+    cart.shipping,
+  );
+  return { ...cart, ...totals };
+};
+
 export const updateCart = async (cart: Pick<Cart, "id">) => {
   const user = await getAuthUser();
 
@@ -589,16 +610,11 @@ export const updateCart = async (cart: Pick<Cart, "id">) => {
     },
   });
 
-  let numItemsInCart = 0;
-  let cartTotal = 0;
-
-  for (const item of cartItems) {
-    numItemsInCart += item.amount;
-    cartTotal += item.amount * item.product.price;
-  }
-  const tax = Math.round(trustedCart.taxRate * cartTotal);
-  const shipping = cartTotal ? trustedCart.shipping : 0;
-  const orderTotal = cartTotal + tax + shipping;
+  const { numItemsInCart, cartTotal, tax, orderTotal } = calculateCartTotals(
+    cartItems,
+    trustedCart.taxRate,
+    trustedCart.shipping,
+  );
 
   const updateCart = await db.cart.update({
     where: {
