@@ -735,21 +735,18 @@ export const updateCartItemAction = async (formData: FormData) => {
 
   if (!cartItemId || !isValidQuantity(amount)) return;
 
-  const cartItem = await db.cartItems.findUnique({
-    where: { id: cartItemId },
-    include: { cart: true },
-  });
-
-  if (!cartItem) return;
-
-  if (cartItem.cart.userId !== user.id) return;
-
-  await db.cartItems.update({
-    where: { id: cartItemId },
+  // Ownership and the write happen in one statement, so there is no gap
+  // between checking the item and updating it. The quantity is set, not
+  // added, so simultaneous updates are safe: the last one wins.
+  const updated = await db.cartItems.updateMany({
+    where: { id: cartItemId, cart: { userId: user.id } },
     data: { amount },
   });
 
-  await updateCart(cartItem.cart);
+  if (updated.count === 0) return;
+
+  const cart = await fetchOrCreateCart();
+  await updateCart(cart);
 
   revalidatePath("/cart");
 };
