@@ -1,4 +1,12 @@
-import "dotenv/config";
+import { config } from "dotenv";
+
+// Run from the project root. Existing environment variables take precedence.
+config({ path: ".env.local" });
+config({ path: ".env" });
+
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL must be set before running the seed");
+}
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
@@ -14,12 +22,8 @@ const STORAGE_BASE =
 const imageUrl = (filename: string) =>
   STORAGE_BASE + encodeURIComponent(filename);
 
-// NOTE: Full-body and Recovery were added here as proper badge categories
-// (not just top-level `muscle` scalar values) because several products
-// belong to more than one group at once -- e.g. Resistance Bands is
-// Chest + Shoulders + Arms + Core + Legs + Recovery simultaneously, which
-// the single `muscle` scalar field on Products can't represent. Grouping
-// now runs entirely through productMuscles badges for consistency.
+// Store filters use these badge relationships, not only Products.muscle.
+// Keep product badges aligned with these existing UI groups.
 const MUSCLES = [
   { name: "Chest", category: "upper-body" },
   { name: "Back", category: "upper-body" },
@@ -31,6 +35,8 @@ const MUSCLES = [
   { name: "Recovery", category: "recovery" },
 ] as const;
 
+type MuscleName = (typeof MUSCLES)[number]["name"];
+
 type ProductSeed = {
   name: string;
   company: string;
@@ -40,7 +46,7 @@ type ProductSeed = {
   featured: boolean;
   category: "fitness" | "recovery";
   muscle: "full-body" | "upper-body" | "lower-body" | "core" | "recovery";
-  muscleBadges: string[]; // matched against MUSCLES by name
+  muscleBadges: MuscleName[]; // checked against the registered badge names
 };
 
 const PRODUCTS: ProductSeed[] = [
@@ -255,7 +261,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: true,
     category: "fitness",
     muscle: "full-body",
-    muscleBadges: ["Chest", "Back", "Shoulders", "Arms", "Legs"],
+    muscleBadges: ["Chest", "Back", "Shoulders", "Arms", "Legs", "Full-body"],
   },
   {
     name: "Massage Ball",
@@ -352,7 +358,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "upper-body",
-    muscleBadges: ["Chest", "Shoulders", "Triceps", "Core"],
+    muscleBadges: ["Chest", "Shoulders", "Arms", "Core"],
   },
   {
     name: "Compact Parallettes",
@@ -364,7 +370,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "upper-body",
-    muscleBadges: ["Chest", "Shoulders", "Triceps", "Core", "Hip Flexors"],
+    muscleBadges: ["Chest", "Shoulders", "Arms", "Core", "Legs"],
   },
   {
     name: "Adjustable Hand Grip Strengthener",
@@ -376,7 +382,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "upper-body",
-    muscleBadges: ["Forearms", "Hand Muscles"],
+    muscleBadges: ["Arms"],
   },
   {
     name: "Finger Resistance Bands",
@@ -388,7 +394,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "upper-body",
-    muscleBadges: ["Forearm Extensors", "Hand Muscles"],
+    muscleBadges: ["Arms"],
   },
   {
     name: "Resistance Tubes with Handles",
@@ -400,7 +406,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "upper-body",
-    muscleBadges: ["Chest", "Shoulders", "Back", "Biceps", "Triceps"],
+    muscleBadges: ["Chest", "Shoulders", "Back", "Arms"],
   },
   {
     name: "Resistance Band Door Anchor",
@@ -412,7 +418,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "upper-body",
-    muscleBadges: ["Back", "Chest", "Shoulders", "Biceps", "Triceps"],
+    muscleBadges: ["Back", "Chest", "Shoulders", "Arms"],
   },
   {
     name: "Portable Dip Bars",
@@ -424,7 +430,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "upper-body",
-    muscleBadges: ["Triceps", "Chest", "Shoulders", "Core", "Hip Flexors"],
+    muscleBadges: ["Arms", "Chest", "Shoulders", "Core", "Legs"],
   },
 
   // CORE
@@ -438,7 +444,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "core",
-    muscleBadges: ["Abs"],
+    muscleBadges: ["Core"],
   },
   {
     name: "Pilates Ring",
@@ -450,7 +456,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "core",
-    muscleBadges: ["Core", "Inner Thighs", "Chest", "Shoulders"],
+    muscleBadges: ["Core", "Legs", "Chest", "Shoulders"],
   },
   {
     name: "Pilates Mini Ball",
@@ -462,7 +468,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "core",
-    muscleBadges: ["Abs", "Obliques", "Inner Thighs", "Glutes"],
+    muscleBadges: ["Core", "Legs"],
   },
   {
     name: "Balance Cushion",
@@ -474,7 +480,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "core",
-    muscleBadges: ["Core", "Glutes", "Calves", "Ankle Stabilizers"],
+    muscleBadges: ["Core", "Legs"],
   },
   {
     name: "Compact Balance Board",
@@ -486,7 +492,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "core",
-    muscleBadges: ["Core", "Glutes", "Quads", "Calves", "Ankle Stabilizers"],
+    muscleBadges: ["Core", "Legs"],
   },
   {
     name: "Pilates Resistance Bar Kit",
@@ -498,7 +504,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "core",
-    muscleBadges: ["Core", "Back", "Shoulders", "Biceps", "Glutes", "Quads"],
+    muscleBadges: ["Core", "Back", "Shoulders", "Arms", "Legs"],
   },
 
   // LOWER BODY
@@ -512,7 +518,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "lower-body",
-    muscleBadges: ["Glutes", "Hip Abductors"],
+    muscleBadges: ["Legs"],
   },
   {
     name: "Resistance Ankle Cuffs",
@@ -524,7 +530,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "lower-body",
-    muscleBadges: ["Glutes", "Hamstrings", "Hip Abductors", "Inner Thighs"],
+    muscleBadges: ["Legs"],
   },
   {
     name: "Squat Wedge Blocks",
@@ -536,7 +542,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "lower-body",
-    muscleBadges: ["Quads", "Glutes"],
+    muscleBadges: ["Legs"],
   },
   {
     name: "Adjustable Aerobic Step",
@@ -548,7 +554,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "lower-body",
-    muscleBadges: ["Quads", "Glutes", "Hamstrings", "Calves"],
+    muscleBadges: ["Legs"],
   },
 
   // FULL BODY
@@ -566,12 +572,10 @@ const PRODUCTS: ProductSeed[] = [
       "Back",
       "Chest",
       "Shoulders",
-      "Biceps",
-      "Triceps",
+      "Arms",
       "Core",
-      "Glutes",
-      "Quads",
-      "Hamstrings",
+      "Legs",
+      "Full-body",
     ],
   },
   {
@@ -584,7 +588,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "full-body",
-    muscleBadges: ["Quads", "Glutes", "Calves", "Core", "Chest", "Triceps"],
+    muscleBadges: ["Legs", "Core", "Chest", "Arms", "Full-body"],
   },
   {
     name: "Compact Weighted Workout Bar",
@@ -596,16 +600,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "fitness",
     muscle: "full-body",
-    muscleBadges: [
-      "Quads",
-      "Glutes",
-      "Hamstrings",
-      "Back",
-      "Shoulders",
-      "Biceps",
-      "Triceps",
-      "Core",
-    ],
+    muscleBadges: ["Legs", "Back", "Shoulders", "Arms", "Core", "Full-body"],
   },
   {
     name: "Portable Resistance Training Board",
@@ -618,15 +613,13 @@ const PRODUCTS: ProductSeed[] = [
     category: "fitness",
     muscle: "full-body",
     muscleBadges: [
-      "Quads",
-      "Glutes",
-      "Hamstrings",
+      "Legs",
       "Back",
       "Chest",
       "Shoulders",
-      "Biceps",
-      "Triceps",
+      "Arms",
       "Core",
+      "Full-body",
     ],
   },
 
@@ -641,7 +634,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "recovery",
     muscle: "recovery",
-    muscleBadges: ["Hamstrings", "Glutes", "Hip Flexors", "Chest", "Shoulders"],
+    muscleBadges: ["Legs", "Chest", "Shoulders", "Recovery"],
   },
   {
     name: "Massage Stick",
@@ -653,7 +646,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "recovery",
     muscle: "recovery",
-    muscleBadges: ["Calves", "Quads", "Hamstrings", "Forearms"],
+    muscleBadges: ["Legs", "Arms", "Recovery"],
   },
   {
     name: "Peanut Massage Ball",
@@ -665,7 +658,7 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "recovery",
     muscle: "recovery",
-    muscleBadges: ["Upper Back", "Spinal Erectors", "Glutes", "Calves"],
+    muscleBadges: ["Back", "Legs", "Recovery"],
   },
   {
     name: "Yoga Bolster",
@@ -677,11 +670,29 @@ const PRODUCTS: ProductSeed[] = [
     featured: false,
     category: "recovery",
     muscle: "recovery",
-    muscleBadges: ["Chest", "Back", "Glutes", "Hip Flexors", "Inner Thighs"],
+    muscleBadges: ["Chest", "Back", "Legs", "Recovery"],
   },
 ];
 
 async function main() {
+  // Validate all input before writing any records.
+  const knownBadges = new Set<string>(MUSCLES.map((m) => m.name));
+  const productNames = new Set<string>();
+  for (const product of PRODUCTS) {
+    if (productNames.has(product.name)) {
+      throw new Error(`Duplicate product name in seed: ${product.name}`);
+    }
+    productNames.add(product.name);
+    if (!product.muscleBadges.length) {
+      throw new Error(`No muscle badges supplied for ${product.name}`);
+    }
+    for (const badge of product.muscleBadges) {
+      if (!knownBadges.has(badge)) {
+        throw new Error(`Unknown badge "${badge}" on ${product.name}`);
+      }
+    }
+  }
+
   const adminEmail = process.env.ADMIN_EMAIL;
   if (!adminEmail) {
     throw new Error("ADMIN_EMAIL must be set so seeded products have an owner");
@@ -697,25 +708,54 @@ async function main() {
   });
 
   console.log("Seeding muscles...");
-  await prisma.muscle.createMany({ data: [...MUSCLES], skipDuplicates: true });
-
+  for (const muscle of MUSCLES) {
+    await prisma.muscle.upsert({
+      where: {
+        name_category: {
+          name: muscle.name,
+          category: muscle.category,
+        },
+      },
+      update: {},
+      create: {
+        name: muscle.name,
+        category: muscle.category,
+      },
+    });
+  }
   const muscleRecords = await prisma.muscle.findMany();
   const muscleIdByName = new Map(muscleRecords.map((m) => [m.name, m.id]));
 
+  let createdCount = 0;
+  let updatedCount = 0;
+  const failedProducts: string[] = [];
   console.log(`Seeding ${PRODUCTS.length} products...`);
   for (const p of PRODUCTS) {
     try {
-      const badgeIds = p.muscleBadges
-        .map((name) => muscleIdByName.get(name))
-        .filter((id): id is string => Boolean(id));
+      const badgeIds = [...new Set(p.muscleBadges)].map((name) => {
+        const id = muscleIdByName.get(name);
+        if (!id) {
+          throw new Error(`Missing database muscle record: ${name}`);
+        }
+        return id;
+      });
 
       // Products.name has no unique constraint, so a blind `.create()` here
       // inserts a fresh duplicate row (with its own duplicate productMuscles
       // badges) every single time this script runs. Checking for an existing
-      // row by name first makes the script idempotent -- safe to re-run.
-      const existing = await prisma.products.findFirst({
+      // row by name first avoids duplicates on sequential re-runs.
+      // Run one seed process at a time; names are not database-unique.
+      const matches = await prisma.products.findMany({
         where: { name: p.name },
+        select: { id: true },
+        take: 2,
       });
+      if (matches.length > 1) {
+        throw new Error(
+          `Multiple database products named "${p.name}"; resolve duplicates before retrying`,
+        );
+      }
+      const existing = matches[0];
 
       if (existing) {
         await prisma.products.update({
@@ -741,6 +781,7 @@ async function main() {
             },
           },
         });
+        updatedCount += 1;
         console.log(`  Updated: ${p.name}  (id: ${existing.id})`);
         continue;
       }
@@ -768,18 +809,28 @@ async function main() {
           userId: admin.id,
         },
       });
+      createdCount += 1;
       console.log(`  Created: ${p.name}  (id: ${created.id})`);
     } catch (error) {
+      failedProducts.push(p.name);
       console.error(`  Failed: ${p.name}`, error);
     }
   }
 
-  console.log("Seeding complete.");
+  console.log(
+    `Seed results: ${createdCount} created, ${updatedCount} updated, ${failedProducts.length} failed.`,
+  );
+  if (failedProducts.length) {
+    throw new Error(
+      `Seed incomplete. Failed products: ${failedProducts.join(", ")}`,
+    );
+  }
+  console.log(`Seeding complete: all ${PRODUCTS.length} products processed.`);
 }
 
 main()
   .catch((e) => {
     console.error(e);
-    process.exit(1);
+    process.exitCode = 1;
   })
   .finally(() => prisma.$disconnect());
