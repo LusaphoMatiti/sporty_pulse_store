@@ -584,7 +584,9 @@ const PRODUCTS: ProductSeed[] = [
     description:
       "Add external resistance to familiar movements such as walking, squats, step-ups and push-ups. A weighted vest keeps the load on your torso, leaving your hands free during training. Choose a manageable weight and build up gradually while maintaining your usual movement control.",
     price: 899,
-    image: imageUrl("1772644146521-adjustable-weight-training-weighted.png"),
+    image: imageUrl(
+      "1772644146521-adjustable-weight-training-weighted-vest.png",
+    ),
     featured: false,
     category: "fitness",
     muscle: "full-body",
