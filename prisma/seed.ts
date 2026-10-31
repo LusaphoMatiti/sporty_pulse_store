@@ -584,7 +584,7 @@ const PRODUCTS: ProductSeed[] = [
     description:
       "Add external resistance to familiar movements such as walking, squats, step-ups and push-ups. A weighted vest keeps the load on your torso, leaving your hands free during training. Choose a manageable weight and build up gradually while maintaining your usual movement control.",
     price: 899,
-    image: imageUrl("adjustable_weight_training_weight_vest.png"),
+    image: imageUrl("1772644146521-adjustable-weight-training-weighted.png"),
     featured: false,
     category: "fitness",
     muscle: "full-body",
@@ -708,8 +708,11 @@ async function main() {
   });
 
   console.log("Seeding muscles...");
+  // Only use IDs returned by the exact (name, category) upserts.
+  // Legacy rows with the same name in another category must not win a lookup.
+  const muscleIdByBadge = new Map<MuscleName, string>();
   for (const muscle of MUSCLES) {
-    await prisma.muscle.upsert({
+    const record = await prisma.muscle.upsert({
       where: {
         name_category: {
           name: muscle.name,
@@ -717,14 +720,11 @@ async function main() {
         },
       },
       update: {},
-      create: {
-        name: muscle.name,
-        category: muscle.category,
-      },
+      create: { ...muscle },
+      select: { id: true },
     });
+    muscleIdByBadge.set(muscle.name, record.id);
   }
-  const muscleRecords = await prisma.muscle.findMany();
-  const muscleIdByName = new Map(muscleRecords.map((m) => [m.name, m.id]));
 
   let createdCount = 0;
   let updatedCount = 0;
@@ -733,7 +733,7 @@ async function main() {
   for (const p of PRODUCTS) {
     try {
       const badgeIds = [...new Set(p.muscleBadges)].map((name) => {
-        const id = muscleIdByName.get(name);
+        const id = muscleIdByBadge.get(name);
         if (!id) {
           throw new Error(`Missing database muscle record: ${name}`);
         }
@@ -825,7 +825,45 @@ async function main() {
       `Seed incomplete. Failed products: ${failedProducts.join(", ")}`,
     );
   }
-  console.log(`Seeding complete: all ${PRODUCTS.length} products processed.`);
+  // Verify the same relationship filter used by fetchFilteredProducts.
+  // No price or search filters are applied to these checks.
+  const groups = [
+    "upper-body",
+    "lower-body",
+    "core",
+    "full-body",
+    "recovery",
+  ] as const;
+  const categoryByBadge = new Map(MUSCLES.map((m) => [m.name, m.category]));
+  for (const category of groups) {
+    const expected = PRODUCTS.filter((product) =>
+      product.muscleBadges.some(
+        (badge) => categoryByBadge.get(badge) === category,
+      ),
+    );
+    const actual = await prisma.products.findMany({
+      where: {
+        productMuscles: { some: { muscle: { category } } },
+      },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    });
+    const actualNames = new Set(actual.map((product) => product.name));
+    const missing = expected.filter(
+      (product) => !actualNames.has(product.name),
+    );
+    console.log(
+      `Category ${category}: ${actual.length} database products; ${expected.length - missing.length}/${expected.length} expected seed products present.`,
+    );
+    if (missing.length) {
+      throw new Error(
+        `Missing products in ${category}: ${missing.map((product) => product.name).join(", ")}`,
+      );
+    }
+  }
+  console.log(
+    `Seeding complete: all ${PRODUCTS.length} products processed and category checks passed.`,
+  );
 }
 
 main()
