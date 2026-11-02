@@ -13,7 +13,10 @@ const PUBLIC_ROUTES = [
 
 // Prefix-matched public routes (this path or anything nested under it)
 const PUBLIC_ROUTE_PREFIXES = [
-  "/products",
+  // Public catalog: the equipment listing, product pages and categories.
+  // Everything else (cart, checkout, orders, favorites, admin) needs a login.
+  "/equipments",
+  "/category",
   // NextAuth's own routes (signin, callback, session, csrf, signout).
   // Without this, the sign-in flow blocks itself -- the callback URL
   // would get redirected to /sign-in before NextAuth ever handles it.
@@ -36,8 +39,10 @@ export async function middleware(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
   // Admin check now compares email rather than a hardcoded user ID --
-  // no longer breaks every time the database gets reseeded.
-  const isAdminUser = token?.email === process.env.ADMIN_EMAIL;
+  // no longer breaks every time the database gets reseeded. Fails closed: if
+  // ADMIN_EMAIL is not set, nobody is an admin.
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const isAdminUser = Boolean(adminEmail) && token?.email === adminEmail;
 
   if (isAdminRoute(pathname) && !isAdminUser) {
     return NextResponse.redirect(new URL("/", req.url));
