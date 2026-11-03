@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "eslint --fix",
     "db:seed": "prisma db seed",
-    "postinstall": "npx prisma generate"
+    "postinstall": "npx prisma generate",
+    "test": "vitest run"
   },
   "dependencies": {
     "@heroui/accordion": "2.2.23",
@@ -113,6 +114,7 @@
     "tailwindcss": "4.1.11",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^3.2.7"
   }
 }

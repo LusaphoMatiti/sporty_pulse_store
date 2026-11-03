@@ -70,8 +70,20 @@ const CART_A = {
 };
 // 2 x R500 + 1 x R200 = R1200, tax R120, shipping R5 -> R1325 (3 items).
 const ITEMS_A = [
-  { id: "ci-1", cartId: "cart-a", productId: "p1", amount: 2, product: { price: 500 } },
-  { id: "ci-2", cartId: "cart-a", productId: "p2", amount: 1, product: { price: 200 } },
+  {
+    id: "ci-1",
+    cartId: "cart-a",
+    productId: "p1",
+    amount: 2,
+    product: { price: 500 },
+  },
+  {
+    id: "ci-2",
+    cartId: "cart-a",
+    productId: "p2",
+    amount: 1,
+    product: { price: 200 },
+  },
 ];
 
 const signInAs = (user: { id: string; email?: string } | null) =>
@@ -105,7 +117,12 @@ beforeEach(() => {
 
   signInAs(USER_A);
   db.cart.findFirst.mockResolvedValue(CART_A);
-  db.cart.update.mockImplementation(async ({ data }) => ({ ...CART_A, ...data }));
+  db.cart.update.mockImplementation(
+    async ({ data }: { data: Record<string, unknown> }) => ({
+      ...CART_A,
+      ...data,
+    }),
+  );
   db.cartItems.findMany.mockResolvedValue(ITEMS_A);
   db.order.deleteMany.mockResolvedValue({ count: 0 });
   db.order.create.mockResolvedValue({ id: "order-1" });
@@ -121,18 +138,44 @@ describe("removing a cart item", () => {
       cart: { id: "cart-b", userId: "user-b" },
     });
 
-    await removeCartItemAction(form({ id: "ci-x" }));
+    const result = await removeCartItemAction(form({ id: "ci-x" }));
 
+    expect(db.cartItems.delete).not.toHaveBeenCalled();
+    // Same answer as for an item that does not exist.
+    expect(result).toEqual({ success: false, message: "Item not found" });
+  });
+
+  it("requires a login and says so", async () => {
+    signInAs(null);
+
+    const result = await removeCartItemAction(form({ id: "ci-1" }));
+
+    expect(result).toEqual({
+      success: false,
+      message: "You must be logged in",
+    });
+    expect(db.cartItems.findUnique).not.toHaveBeenCalled();
     expect(db.cartItems.delete).not.toHaveBeenCalled();
   });
 
-  it("requires a login", async () => {
-    signInAs(null);
+  it("reports an item that does not exist", async () => {
+    db.cartItems.findUnique.mockResolvedValue(null);
 
-    await expect(removeCartItemAction(form({ id: "ci-1" }))).rejects.toThrow();
+    const result = await removeCartItemAction(form({ id: "ghost" }));
 
-    expect(db.cartItems.findUnique).not.toHaveBeenCalled();
-    expect(db.cartItems.delete).not.toHaveBeenCalled();
+    expect(result).toEqual({ success: false, message: "Item not found" });
+  });
+
+  it("hides database error details from the customer", async () => {
+    db.cartItems.findUnique.mockRejectedValue(
+      new Error("connection to postgres://user:secret@host failed"),
+    );
+
+    const result = await removeCartItemAction(form({ id: "ci-1" }));
+
+    expect(result.success).toBe(false);
+    expect(result.message).toBe("Could not remove the item. Please try again.");
+    expect(result.message).not.toContain("secret");
   });
 
   it("deletes the customer's own item", async () => {
@@ -141,55 +184,88 @@ describe("removing a cart item", () => {
       cart: CART_A,
     });
 
-    await removeCartItemAction(form({ id: "ci-1" }));
+    const result = await removeCartItemAction(form({ id: "ci-1" }));
 
     expect(db.cartItems.delete).toHaveBeenCalledWith({ where: { id: "ci-1" } });
+    expect(result).toEqual({ success: true, message: "Item removed" });
   });
 });
 
 describe("updating a cart item quantity", () => {
   it.each(["0", "-1", "1.5", "100", "abc", ""])(
     "ignores the invalid quantity %j",
-    async (amount) => {
-      await updateCartItemAction(form({ id: "ci-1", amount }));
+    async (amount: string) => {
+      const result = await updateCartItemAction(form({ id: "ci-1", amount }));
 
       expect(db.cartItems.updateMany).not.toHaveBeenCalled();
+      expect(result.success).toBe(false);
+      expect(result.message).toContain("whole number from 1 to 99");
     },
   );
 
   it("only updates items that belong to the logged-in customer", async () => {
     db.cartItems.updateMany.mockResolvedValue({ count: 1 });
 
-    await updateCartItemAction(form({ id: "ci-1", amount: "3" }));
+    const result = await updateCartItemAction(
+      form({ id: "ci-1", amount: "3" }),
+    );
 
     expect(db.cartItems.updateMany).toHaveBeenCalledWith({
       where: { id: "ci-1", cart: { userId: "user-a" } },
       data: { amount: 3 },
+    });
+    // The saved quantity is returned so the UI can reconcile its selector.
+    expect(result).toEqual({
+      success: true,
+      message: "Cart updated",
+      amount: 3,
     });
   });
 
   it("does nothing further when the item is not theirs", async () => {
     db.cartItems.updateMany.mockResolvedValue({ count: 0 });
 
-    await updateCartItemAction(form({ id: "ci-x", amount: "3" }));
+    const result = await updateCartItemAction(
+      form({ id: "ci-x", amount: "3" }),
+    );
 
     expect(db.cart.update).not.toHaveBeenCalled();
+    expect(result).toEqual({ success: false, message: "Item not found" });
   });
 
-  it("requires a login", async () => {
+  it("requires a login and says so", async () => {
     signInAs(null);
 
-    await expect(
-      updateCartItemAction(form({ id: "ci-1", amount: "2" })),
-    ).rejects.toThrow();
+    const result = await updateCartItemAction(
+      form({ id: "ci-1", amount: "2" }),
+    );
+
+    expect(result).toEqual({
+      success: false,
+      message: "You must be logged in",
+    });
     expect(db.cartItems.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("hides database error details from the customer", async () => {
+    db.cartItems.updateMany.mockRejectedValue(
+      new Error("connection to postgres://user:secret@host failed"),
+    );
+
+    const result = await updateCartItemAction(
+      form({ id: "ci-1", amount: "2" }),
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.message).toBe("Could not update the cart. Please try again.");
+    expect(result.message).not.toContain("secret");
   });
 });
 
 describe("adding to the cart", () => {
   it.each(["-5", "0", "1.5", "100", "abc"])(
     "rejects the invalid quantity %j",
-    async (amount) => {
+    async (amount: string) => {
       db.cartItems.findFirst.mockResolvedValue(null);
 
       const result = await addToCartAction(
@@ -238,7 +314,9 @@ describe("updateCartOrCreateItemAction", () => {
       updateCartOrCreateItemAction({ amount: 1, productId: "ghost" }),
     ).rejects.toThrow("Product not found");
 
-    expect(db.cart.findFirst).toHaveBeenCalledWith({ where: { userId: "user-a" } });
+    expect(db.cart.findFirst).toHaveBeenCalledWith({
+      where: { userId: "user-a" },
+    });
     expect(db.cartItems.create).not.toHaveBeenCalled();
   });
 
@@ -264,7 +342,9 @@ describe("recalculating a cart", () => {
   it("refuses a cart that belongs to someone else", async () => {
     db.cart.findFirst.mockResolvedValue(null); // no cart with that id for this user
 
-    await expect(updateCart({ id: "cart-b" })).rejects.toThrow("Cart not found");
+    await expect(updateCart({ id: "cart-b" })).rejects.toThrow(
+      "Cart not found",
+    );
 
     expect(db.cart.findFirst).toHaveBeenCalledWith({
       where: { id: "cart-b", userId: "user-a" },
@@ -330,7 +410,9 @@ describe("placing an order", () => {
     expect(where.userId).toBe("user-a");
     expect(where.isPaid).toBe(false);
     const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    expect(Math.abs(where.createdAt.lt.getTime() - sevenDaysAgo)).toBeLessThan(5000);
+    expect(Math.abs(where.createdAt.lt.getTime() - sevenDaysAgo)).toBeLessThan(
+      5000,
+    );
   });
 
   it("requires a login", async () => {
@@ -348,7 +430,9 @@ describe("admin-only product actions", () => {
   it("blocks a signed-in customer who is not the admin", async () => {
     vi.stubEnv("ADMIN_EMAIL", "admin@example.com");
 
-    await expect(updateProductAction({}, edit())).rejects.toThrow("NEXT_REDIRECT:/");
+    await expect(updateProductAction({}, edit())).rejects.toThrow(
+      "NEXT_REDIRECT:/",
+    );
     await expect(
       deleteProductAction({}, form({ productId: "p1" })),
     ).rejects.toThrow("NEXT_REDIRECT:/");
@@ -363,7 +447,9 @@ describe("admin-only product actions", () => {
     vi.stubEnv("ADMIN_EMAIL", undefined);
     signInAs({ id: "user-x" });
 
-    await expect(updateProductAction({}, edit())).rejects.toThrow("NEXT_REDIRECT:/");
+    await expect(updateProductAction({}, edit())).rejects.toThrow(
+      "NEXT_REDIRECT:/",
+    );
 
     expect(db.products.update).not.toHaveBeenCalled();
   });
@@ -372,7 +458,9 @@ describe("admin-only product actions", () => {
     vi.stubEnv("ADMIN_EMAIL", "");
     signInAs({ id: "user-x", email: "" });
 
-    await expect(updateProductAction({}, edit())).rejects.toThrow("NEXT_REDIRECT:/");
+    await expect(updateProductAction({}, edit())).rejects.toThrow(
+      "NEXT_REDIRECT:/",
+    );
 
     expect(db.products.update).not.toHaveBeenCalled();
   });
@@ -381,7 +469,9 @@ describe("admin-only product actions", () => {
     vi.stubEnv("ADMIN_EMAIL", "admin@example.com");
     signInAs({ id: "user-x", email: "ADMIN@example.com" });
 
-    await expect(updateProductAction({}, edit())).rejects.toThrow("NEXT_REDIRECT:/");
+    await expect(updateProductAction({}, edit())).rejects.toThrow(
+      "NEXT_REDIRECT:/",
+    );
   });
 
   it("requires a login", async () => {
@@ -401,7 +491,7 @@ describe("admin-only product actions", () => {
 
     it.each(["0", "-5", "1.5", "abc", ""])(
       "rejects the invalid price %j",
-      async (price) => {
+      async (price: string) => {
         const result = await updateProductAction({}, edit(price));
 
         expect(result.success).toBe(false);
@@ -414,7 +504,9 @@ describe("admin-only product actions", () => {
 
       expect(result.success).toBe(true);
       expect(db.products.update).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ price: 700 }) }),
+        expect.objectContaining({
+          data: expect.objectContaining({ price: 700 }),
+        }),
       );
     });
   });
@@ -427,7 +519,10 @@ describe("no action writes anything without a login", () => {
     await Promise.allSettled([
       removeCartItemAction(form({ id: "ci-1" })),
       updateCartItemAction(form({ id: "ci-1", amount: "2" })),
-      addToCartAction({ success: false, message: "" }, form({ productId: "p1" })),
+      addToCartAction(
+        { success: false, message: "" },
+        form({ productId: "p1" }),
+      ),
       createOrderAction(form({})),
       updateCart({ id: "cart-a" }),
       updateCartOrCreateItemAction({ amount: 1, productId: "p1" }),

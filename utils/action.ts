@@ -452,6 +452,15 @@ export type CartActionState = {
   message: string;
 };
 
+// Result of updating or removing a cart item. `amount` is the quantity that
+// was saved, so the UI can reconcile its selector with the server.
+export type CartItemActionState = CartActionState & { amount?: number };
+
+// Expected problems (for example "You must be logged in") keep their message.
+// Anything else gets a generic one, so database details never reach the user.
+const cartItemErrorMessage = (error: unknown, fallback: string) =>
+  error instanceof AppError ? error.message : fallback;
+
 export const addToCartAction = async (
   prevState: CartActionState,
   formData: FormData,
@@ -716,55 +725,93 @@ export const fetchAdminOrders = async () => {
   return orders;
 };
 
-export const removeCartItemAction = async (formData: FormData) => {
-  const user = await getAuthUser();
+export const removeCartItemAction = async (
+  formData: FormData,
+): Promise<CartItemActionState> => {
+  try {
+    const user = await getAuthUser();
 
-  const cartItemId = formData.get("id") as string;
+    const cartItemId = formData.get("id") as string;
 
-  if (!cartItemId) {
-    return;
+    if (!cartItemId) {
+      return { success: false, message: "Item not found" };
+    }
+
+    const cartItem = await db.cartItems.findUnique({
+      where: { id: cartItemId },
+      include: { cart: true },
+    });
+
+    // Someone else's item gets the same answer as one that does not exist.
+    if (!cartItem || cartItem.cart.userId !== user.id) {
+      return { success: false, message: "Item not found" };
+    }
+
+    await db.cartItems.delete({
+      where: { id: cartItemId },
+    });
+
+    await updateCart(cartItem.cart);
+
+    revalidatePath("/cart");
+    return { success: true, message: "Item removed" };
+  } catch (error) {
+    return {
+      success: false,
+      message: cartItemErrorMessage(
+        error,
+        "Could not remove the item. Please try again.",
+      ),
+    };
   }
-
-  const cartItem = await db.cartItems.findUnique({
-    where: { id: cartItemId },
-    include: { cart: true },
-  });
-
-  if (!cartItem) return;
-
-  if (cartItem.cart.userId !== user.id) return;
-
-  await db.cartItems.delete({
-    where: { id: cartItemId },
-  });
-
-  await updateCart(cartItem.cart);
-
-  revalidatePath("/cart");
 };
 
-export const updateCartItemAction = async (formData: FormData) => {
-  const user = await getAuthUser();
+export const updateCartItemAction = async (
+  formData: FormData,
+): Promise<CartItemActionState> => {
+  try {
+    const user = await getAuthUser();
 
-  const cartItemId = formData.get("id") as string;
-  const amount = Number(formData.get("amount"));
+    const cartItemId = formData.get("id") as string;
+    const amount = Number(formData.get("amount"));
 
-  if (!cartItemId || !isValidQuantity(amount)) return;
+    if (!cartItemId) {
+      return { success: false, message: "Item not found" };
+    }
 
-  // Ownership and the write happen in one statement, so there is no gap
-  // between checking the item and updating it. The quantity is set, not
-  // added, so simultaneous updates are safe: the last one wins.
-  const updated = await db.cartItems.updateMany({
-    where: { id: cartItemId, cart: { userId: user.id } },
-    data: { amount },
-  });
+    if (!isValidQuantity(amount)) {
+      return {
+        success: false,
+        message: `Quantity must be a whole number from 1 to ${MAX_ITEM_QUANTITY}`,
+      };
+    }
 
-  if (updated.count === 0) return;
+    // Ownership and the write happen in one statement, so there is no gap
+    // between checking the item and updating it. The quantity is set, not
+    // added, so simultaneous updates are safe: the last one wins.
+    const updated = await db.cartItems.updateMany({
+      where: { id: cartItemId, cart: { userId: user.id } },
+      data: { amount },
+    });
 
-  const cart = await fetchOrCreateCart();
-  await updateCart(cart);
+    if (updated.count === 0) {
+      return { success: false, message: "Item not found" };
+    }
 
-  revalidatePath("/cart");
+    const cart = await fetchOrCreateCart();
+    await updateCart(cart);
+
+    revalidatePath("/cart");
+    return { success: true, message: "Cart updated", amount };
+  } catch (error) {
+    return {
+      success: false,
+      message: cartItemErrorMessage(
+        error,
+        "Could not update the cart. Please try again.",
+      ),
+    };
+  }
 };
 
 // action.ts
