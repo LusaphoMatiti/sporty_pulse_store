@@ -16,7 +16,6 @@ export const FirstColumn = ({
         alt={name}
         fill
         sizes="(max-width: 768px) 100vw, (max-width:1200px) 50vw, 33vw"
-        priority
         className="w-full rounded-md object-cover"
       />
     </div>
@@ -34,7 +33,7 @@ export const SecondColumn = ({
 }) => {
   return (
     <div className="sm:w-48">
-      <Link href={`/products/${productId}`}>
+      <Link href={`/equipments/${productId}`}>
         <h3 className="capitalize font-medium hover:underline">{name}</h3>
       </Link>
       <h4 className="mt-2 capitalize text-xs">{company}</h4>
