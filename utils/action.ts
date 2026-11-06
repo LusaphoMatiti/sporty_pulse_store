@@ -54,4 +54,4 @@ export {
 } from "./actions/cart";
 export type { CartActionState, CartItemActionState } from "./actions/cart";
 export { createOrderAction, fetchUserOrders } from "./actions/orders";
-export { getAuthUser as default } from "./guards";
+export { default } from "./actions/session";
