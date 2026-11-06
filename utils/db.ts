@@ -8,7 +8,10 @@ declare global {
 const prisma =
   globalThis.prisma ??
   new PrismaClient({
-    adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }),
+    adapter: new PrismaPg({
+      connectionString: process.env.DATABASE_URL!,
+      max: Number(process.env.DB_POOL_MAX ?? 3),
+    }),
   });
 
 if (process.env.NODE_ENV !== "production") globalThis.prisma = prisma;

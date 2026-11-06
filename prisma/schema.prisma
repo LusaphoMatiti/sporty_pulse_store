@@ -37,9 +37,15 @@ model Products {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
+  @@index([userId])
+  @@index([featured])
+  @@index([company])
+  @@index([createdAt])
+  @@index([price])
 
-  userId         String
-  user           User           @relation(fields: [userId], references: [id])
+
+  userId         String?
+  user           User?           @relation(fields: [userId], references: [id])
 
   category       Category[]
   favorites      Favorite[]
@@ -88,6 +94,7 @@ model Favorite {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, productId])
+  @@index([productId])
 }
 
 model Review {
@@ -104,6 +111,7 @@ model Review {
   productId      String
 
   @@index([productId])
+    @@index([userId])
 }
 
 model Cart {
@@ -121,6 +129,7 @@ model Cart {
   cartItems      CartItems[]
 
   @@unique([userId])
+  
 }
 
 model CartItems {
@@ -134,6 +143,7 @@ model CartItems {
   updatedAt DateTime @updatedAt
 
   @@index([cartId])
+  @@index([productId])
 }
 
 model Order {
@@ -153,6 +163,7 @@ model Order {
   orderItems OrderItems[]
 
   @@index([userId])
+  @@index([userId, createdAt])
 }
 
 // ─────────────────────────────────────────────
@@ -171,5 +182,5 @@ model OrderItems {
   product Products @relation(fields: [productId], references: [id])
 
   @@index([orderId])
-  @@map("order_items")
+  @@index([productId])
 }
