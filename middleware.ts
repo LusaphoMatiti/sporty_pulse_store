@@ -9,6 +9,7 @@ const PUBLIC_ROUTES = [
   "/sign-in",
   "/sign-up",
   "/api/payfast/notify",
+  "/api/health",
 ];
 
 // Prefix-matched public routes (this path or anything nested under it)
