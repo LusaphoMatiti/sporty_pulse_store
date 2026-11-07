@@ -6,7 +6,6 @@ const PRODUCT_ID = __ENV.PRODUCT_ID;
 
 const paths = [
   "/equipments",
-  "/featured-products",
   "/category/fitness",
   "/category/recovery",
   "/api/health",
