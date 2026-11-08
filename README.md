@@ -1,126 +1,67 @@
-# Sporty Pulse
+# Sporty Pulse Store
 
-**Full‑Stack SaaS E‑commerce Platform**
+E-commerce store for gym equipment, built with Next.js. Purchases unlock entitlements in the companion app, Sporty Pulse Pro.
 
-Sporty Pulse is a production‑ready SaaS e‑commerce platform focused on solving real purchasing friction in online sports retail. The platform prioritizes fast product discovery, scalable backend architecture, and a smooth checkout experience across devices.
+## Stack
 
----
+Next.js 15 (App Router), React, TypeScript, Tailwind CSS, NextAuth (Google and email/password), Postgres on Supabase via Prisma 7, PayFast payments, Supabase Storage for images, Vercel hosting, Vitest.
 
-## Problem Statement
+## Why these choices
 
-Most small‑to‑medium e‑commerce platforms struggle with three core issues:
+- **Next.js App Router and Server Actions**: server-first data access, no separate API layer for most features. Trade-off: coupling to Next.js.
+- **PostgreSQL**: relational integrity for products, orders and payments. Trade-off: more upfront schema planning.
+- **PayFast**: the payment provider for South African customers. Orders are marked paid only by PayFast's server-to-server notification (ITN), never by the browser return.
+- **Server-side pricing**: totals are recalculated from database prices at cart update, order creation and checkout.
 
-1. **Slow product discovery** – Poor filtering, bloated client‑side logic, and unstructured URLs make it hard for users to find products quickly.
-2. **Fragile scalability** – Business logic tightly coupled to the frontend makes growth, refactoring, and feature expansion risky.
-3. **Inconsistent buying experience** – Many platforms break down on mobile, suffer performance issues, or complicate checkout flows.
+Full detail: [`docs/architecture.md`](docs/architecture.md) and [`docs/payment-flow.md`](docs/payment-flow.md).
 
-**Sporty Pulse** addresses these problems by:
+## Getting started
 
-- Using URL‑driven filters for predictable navigation and SEO
-- Handling data fetching and mutations server‑side for consistency and performance
-- Delivering a fast, responsive, mobile‑first purchasing flow
+```bash
+npm install            # also runs prisma generate
+cp .env.example .env   # then fill in values (see below)
+npx prisma db push
+npm run db:seed
+npm run dev
+```
 
----
+### Environment variables
+
+Names only; never commit values.
+
+| Variable                                                                            | Purpose                                                     |
+| ----------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `DATABASE_URL`                                                                      | Runtime connection (Supabase pooler)                        |
+| `DIRECT_URL`                                                                        | Direct connection for `prisma db push`                      |
+| `DB_POOL_MAX`                                                                       | Optional pool size per instance (default 3)                 |
+| `NEXTAUTH_URL`, `NEXTAUTH_SECRET`                                                   | NextAuth; `NEXTAUTH_URL` is also used to build PayFast URLs |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`                                          | Google sign-in                                              |
+| `ADMIN_EMAIL`                                                                       | The one admin account; unset means no admins                |
+| `PAYFAST_MERCHANT_ID`, `PAYFAST_MERCHANT_KEY`, `PAYFAST_PASSPHRASE`, `PAYFAST_MODE` | PayFast (`sandbox` or `live`)                               |
+| `STORE_BRIDGE_SECRET`, `PRO_API_BASE_URL`                                           | Entitlement delivery to Sporty Pulse Pro                    |
+
+## Scripts
+
+| Command              | What it does                           |
+| -------------------- | -------------------------------------- |
+| `npm run dev`        | Dev server                             |
+| `npm run build`      | `prisma generate` and production build |
+| `npm test`           | Vitest                                 |
+| `npm run lint:check` | ESLint, read-only (used by CI)         |
+| `npm run lint`       | ESLint with `--fix` (changes files)    |
+| `npx tsc --noEmit`   | Typecheck                              |
+
+## Quality checks
+
+GitHub Actions (`.github/workflows/ci.yml`) runs typecheck, lint and tests on every pull request and push to `main`. Next's build-time lint is disabled in `next.config.js`, so CI is where linting is enforced.
+
+## Operations
+
+- Health check: `GET /api/health`
+- Load test: `k6 run loadtests/store.js -e BASE_URL=<url> -e PRODUCT_ID=<id>`
+- Vercel function region: `sin1`, matching the Supabase pooler.
 
 ## Screenshots
 
-### Desktop
-
 ![Desktop](screenshots/desktop.png)
-
-### Mobile
-
 ![Mobile](screenshots/mobile.png)
-
----
-
-## Tech Stack
-
-- **Next.js (App Router)**
-- **React & TypeScript**
-- **PostgreSQL**
-- **Server Actions**
-- **Tailwind CSS**
-- **Cloudinary** (media delivery)
-- **PayFast** (payments)
-
----
-
-## Technical Decisions
-
-### Why Next.js (App Router)
-
-- Enables **server‑first architecture** with fine‑grained control over rendering
-- Supports **Server Actions**, reducing the need for a separate API layer
-- Built‑in routing, layouts, and metadata improve maintainability and SEO
-- Ideal for SaaS products that require both performance and flexibility
-
-### Why Server Actions
-
-- Centralizes business logic on the server
-- Reduces client bundle size and network round‑trips
-- Improves security by keeping sensitive logic off the client
-- Simplifies data mutations compared to traditional REST patterns
-
-### Why PostgreSQL
-
-- Strong relational integrity for products, orders, users, and payments
-- Well‑suited for transactional e‑commerce workloads
-- Scales cleanly as data volume and complexity increase
-
-### Why Tailwind CSS
-
-- Enables rapid UI iteration without CSS bloat
-- Encourages consistent spacing, typography, and layout
-- Keeps styling colocated with components for clarity
-
-### Why Cloudinary
-
-- Optimized image delivery and automatic format selection
-- Reduces load times across devices and network conditions
-- Offloads media processing from the application server
-
-### Why Payfast
-
-- Secure, production‑grade payment handling
-- Webhook‑based flow for reliable order processing
-- Scales internationally without custom payment logic
-
----
-
-## Performance & SEO Considerations
-
-- **Server‑side rendering** for critical pages improves Time‑to‑First‑Byte
-- **URL‑based filtering** enables crawlable, shareable product views
-- **Optimized images** via Cloudinary reduce payload size
-- **Minimal client JavaScript** by leaning on Server Components
-- **Structured metadata** using Next.js App Router conventions
-
-These decisions ensure the platform performs well under load and remains SEO‑friendly as the catalog grows.
-
----
-
-## Tradeoffs
-
-- **Server Actions vs REST API**
-
-  - Pro: Cleaner architecture, less boilerplate
-  - Con: Tighter coupling to Next.js ecosystem
-
-- **App Router complexity**
-
-  - Pro: Powerful composition and data flow
-  - Con: Steeper learning curve and stricter conventions
-
-- **Relational database over NoSQL**
-
-  - Pro: Data consistency and transactional safety
-  - Con: Requires more upfront schema planning
-
-Each tradeoff was made intentionally with long‑term maintainability and SaaS scalability in mind.
-
----
-
-## Summary
-
-Sporty Pulse is not a demo project—it is a **realistic SaaS e‑commerce foundation** built with production concerns in mind: performance, scalability, and clean architecture. The project reflects how modern full‑stack applications should be designed when growth and maintainability matter.
