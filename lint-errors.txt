@@ -1,0 +1,33 @@
+
+C:\Users\lusap\Sporty Pulse Store\app\(protected)\admin\products\create\page.tsx
+  54:15  error  A form label must be associated with a control  jsx-a11y/label-has-associated-control
+
+C:\Users\lusap\Sporty Pulse Store\components\footer\Footer.tsx
+  25:15  error  The href attribute requires a valid value to be accessible. Provide a valid, navigable address as the href value. If you cannot provide a valid href, but still need the element to resemble a link, use a button and change it with appropriate styles. Learn more: https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/blob/HEAD/docs/rules/anchor-is-valid.md  jsx-a11y/anchor-is-valid
+  31:15  error  The href attribute requires a valid value to be accessible. Provide a valid, navigable address as the href value. If you cannot provide a valid href, but still need the element to resemble a link, use a button and change it with appropriate styles. Learn more: https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/blob/HEAD/docs/rules/anchor-is-valid.md  jsx-a11y/anchor-is-valid
+  41:15  error  The href attribute requires a valid value to be accessible. Provide a valid, navigable address as the href value. If you cannot provide a valid href, but still need the element to resemble a link, use a button and change it with appropriate styles. Learn more: https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/blob/HEAD/docs/rules/anchor-is-valid.md  jsx-a11y/anchor-is-valid
+
+C:\Users\lusap\Sporty Pulse Store\components\global\EmptyState.tsx
+  25:15  error  Unknown property 'stroke-width' found, use 'strokeWidth' instead        react/no-unknown-property
+  31:17  error  Unknown property 'stroke-linecap' found, use 'strokeLinecap' instead    react/no-unknown-property
+  32:17  error  Unknown property 'stroke-linejoin' found, use 'strokeLinejoin' instead  react/no-unknown-property
+
+C:\Users\lusap\Sporty Pulse Store\components\global\Trainer.tsx
+  73:9  error  The href attribute is required for an anchor to be keyboard accessible. Provide a valid, navigable address as the href value. If you cannot provide an href, but still need the element to resemble a link, use a button and change it with appropriate styles. Learn more: https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/blob/HEAD/docs/rules/anchor-is-valid.md  jsx-a11y/anchor-is-valid
+
+C:\Users\lusap\Sporty Pulse Store\components\navbar\NavSearch.tsx
+  34:9  error  The autoFocus prop should not be used, as it can reduce usability and accessibility for users  jsx-a11y/no-autofocus
+
+C:\Users\lusap\Sporty Pulse Store\components\navbar\SearchOverlay.tsx
+  35:7   error  Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and support for tabbing, mouse, keyboard, and touch inputs to an interactive content element  jsx-a11y/no-static-element-interactions
+  50:22  error  The autoFocus prop should not be used, as it can reduce usability and accessibility for users                                                                                                      jsx-a11y/no-autofocus
+
+C:\Users\lusap\Sporty Pulse Store\components\navbar\UserIcon.tsx
+  12:7  error  Redundant alt attribute. Screen-readers already announce `img` tags as an image. You don’t need to use the words `image`, `photo,` or `picture` (or any specified custom words) in the alt prop  jsx-a11y/img-redundant-alt
+
+C:\Users\lusap\Sporty Pulse Store\components\products\ProductsList.tsx
+  63:15  error  Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and support for tabbing, mouse, keyboard, and touch inputs to an interactive content element  jsx-a11y/no-static-element-interactions
+
+✖ 13 problems (13 errors, 0 warnings)
+  3 errors and 0 warnings potentially fixable with the `--fix` option.
+
